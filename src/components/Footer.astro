@@ -1,0 +1,35 @@
+---
+import { site, withBase } from '../lib/site';
+---
+
+<footer class="border-t border-[var(--line)]">
+  <div
+    class="mx-auto grid max-w-7xl gap-8 px-5 py-10 text-sm text-[var(--muted)] md:grid-cols-[1fr_auto] lg:px-8"
+  >
+    <div>
+      <p class="font-medium text-[var(--ink)]">{site.title}</p>
+      <p class="mt-2 max-w-2xl">
+        A side portfolio for AI-built media and experiments. Main writing,
+        search, tags, and longer notes live on Min Wen's blog.
+      </p>
+    </div>
+    <div class="flex flex-wrap gap-4 md:justify-end">
+      <a
+        class="focus-ring rounded hover:text-[var(--ink)]"
+        href={withBase('/works/')}>Gallery</a
+      >
+      <a
+        class="focus-ring rounded hover:text-[var(--ink)]"
+        href="https://cmwen.github.io/">Blog</a
+      >
+      <a
+        class="focus-ring rounded hover:text-[var(--ink)]"
+        href="https://cmwen.github.io/posts/">Posts</a
+      >
+      <a
+        class="focus-ring rounded hover:text-[var(--ink)]"
+        href="https://cmwen.github.io/about/">About Min</a
+      >
+    </div>
+  </div>
+</footer>

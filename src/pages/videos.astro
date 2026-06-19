@@ -1,0 +1,19 @@
+---
+import PageHeader from '../components/PageHeader.astro';
+import WorkGrid from '../components/WorkGrid.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getWorksByType } from '../lib/works';
+
+const works = await getWorksByType(['video', 'embed']);
+---
+
+<BaseLayout title="Videos" description="AI video studies and safe embeds.">
+  <PageHeader
+    eyebrow="Videos"
+    title="AI video and embed studies."
+    description="Hosted video experiments with local metadata and safe provider embeds where supported."
+  />
+  <section class="mx-auto max-w-7xl px-5 pb-20 lg:px-8">
+    <WorkGrid works={works} />
+  </section>
+</BaseLayout>

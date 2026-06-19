@@ -1,0 +1,59 @@
+---
+import PageHeader from '../components/PageHeader.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="About"
+  description="How this AI portfolio fits beside Min Wen's main blog."
+>
+  <PageHeader
+    eyebrow="About"
+    title="A small place for AI artifacts, not another blog."
+    description="The main blog stays the home for long writing. This project keeps images and experiments easy to publish, browse, and revisit."
+  />
+  <section
+    class="mx-auto grid max-w-7xl gap-10 px-5 pb-20 lg:grid-cols-3 lg:px-8"
+  >
+    <div class="prose-lab lg:col-span-2">
+      <h2>Process</h2>
+      <p>
+        The default workflow is intentionally small: copy generated images into
+        <code>incoming/images</code>, then run the site. Automation creates the
+        optimized media, thumbnail, and landing-page MDX entry.
+      </p>
+      <p>
+        When something deserves more care, the generated MDX can be edited into
+        a fuller note with prompt details, tools, tags, and provenance.
+      </p>
+      <h2>Main blog</h2>
+      <p>
+        Longer posts, search, tags, and personal context live at
+        <a href="https://cmwen.github.io/">cmwen.github.io</a>. This site points
+        back there instead of trying to duplicate that structure.
+      </p>
+      <h2>Licensing</h2>
+      <p>
+        Generated entries default to CC BY-NC 4.0 unless noted otherwise.
+        Replace that value when a source tool, model, or project needs different
+        usage notes.
+      </p>
+      <h2>Provenance</h2>
+      <p>
+        Auto-imported images include the source filename and a SHA-256 checksum
+        so later cleanup can tell what came from which local file.
+      </p>
+    </div>
+    <aside
+      class="rounded-lg border border-[var(--line)] bg-[var(--surface)] p-6"
+    >
+      <h2 class="text-xl font-semibold">V1 principles</h2>
+      <ul class="mt-4 space-y-3 text-sm leading-6 text-[var(--muted)]">
+        <li>Main blog remains the hub.</li>
+        <li>Images can start with almost no manual metadata.</li>
+        <li>Generated records are editable when needed.</li>
+        <li>Small static output stays easy to host on GitHub Pages.</li>
+      </ul>
+    </aside>
+  </section>
+</BaseLayout>

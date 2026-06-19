@@ -1,0 +1,92 @@
+---
+import { isEmbeddable, type Work } from '../lib/works';
+import { withBase } from '../lib/site';
+
+interface Props {
+  work: Work;
+}
+
+const { work } = Astro.props;
+const data = work.data;
+const heroAlt = data.heroImageAlt ?? data.thumbnailAlt;
+---
+
+<section class="space-y-6">
+  {
+    data.heroImage && (
+      <img
+        class="w-full rounded-lg border border-[var(--line)] object-cover"
+        src={withBase(data.heroImage)}
+        alt={heroAlt}
+        loading="eager"
+        decoding="async"
+      />
+    )
+  }
+
+  {
+    (data.type === 'embed' || data.type === 'video') &&
+      data.embedUrl &&
+      isEmbeddable(data.embedUrl) && (
+        <div class="aspect-video overflow-hidden rounded-lg border border-[var(--line)] bg-black">
+          <iframe
+            class="h-full w-full"
+            src={data.embedUrl}
+            title={`${data.title} video embed`}
+            loading="lazy"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowfullscreen
+          />
+        </div>
+      )
+  }
+
+  {
+    data.type === 'audio' && data.audioUrl && (
+      <div class="rounded-lg border border-[var(--line)] bg-[var(--surface)] p-4">
+        <audio
+          class="w-full"
+          controls
+          preload="metadata"
+          src={withBase(data.audioUrl)}
+        >
+          <a href={withBase(data.audioUrl)}>Download the audio sample</a>
+        </audio>
+      </div>
+    )
+  }
+
+  {
+    data.images.length > 0 && (
+      <div class="grid gap-4 sm:grid-cols-2">
+        {data.images.map((image) => (
+          <figure class="overflow-hidden rounded-lg border border-[var(--line)] bg-[var(--surface)]">
+            <img
+              class="aspect-[4/3] h-full w-full object-cover"
+              src={withBase(image.src)}
+              alt={image.alt}
+              loading="lazy"
+              decoding="async"
+            />
+            {image.caption && (
+              <figcaption class="px-4 py-3 text-sm text-[var(--muted)]">
+                {image.caption}
+              </figcaption>
+            )}
+          </figure>
+        ))}
+      </div>
+    )
+  }
+
+  {
+    data.externalUrl && (
+      <a
+        class="focus-ring inline-flex rounded-full border border-[var(--line)] bg-[var(--surface)] px-4 py-2 text-sm font-medium hover:border-[var(--accent)]"
+        href={data.externalUrl}
+      >
+        Open external media
+      </a>
+    )
+  }
+</section>

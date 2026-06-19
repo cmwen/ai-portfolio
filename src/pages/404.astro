@@ -1,0 +1,29 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { withBase } from '../lib/site';
+---
+
+<BaseLayout
+  title="Not found"
+  description="The requested portfolio page was not found."
+>
+  <section class="mx-auto max-w-3xl px-5 py-24 text-center">
+    <p
+      class="text-sm font-semibold uppercase tracking-[0.22em] text-[var(--accent-ink)]"
+    >
+      404
+    </p>
+    <h1 class="mt-4 text-4xl font-semibold md:text-6xl">
+      This work is off-canvas.
+    </h1>
+    <p class="mt-6 text-lg leading-8 text-[var(--muted)]">
+      The page does not exist, or the work is still a draft.
+    </p>
+    <a
+      class="focus-ring mt-8 inline-flex rounded-full bg-[var(--ink)] px-5 py-3 text-sm font-semibold text-[var(--bg)]"
+      href={withBase('/works/')}
+    >
+      Back to works
+    </a>
+  </section>
+</BaseLayout>

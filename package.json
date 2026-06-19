@@ -1,0 +1,30 @@
+{
+  "name": "ai-portfolio",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "sync:images": "node scripts/sync-images.mjs",
+    "dev": "pnpm sync:images && astro dev",
+    "build": "pnpm sync:images && astro build",
+    "preview": "astro preview",
+    "check": "pnpm sync:images && astro check",
+    "format": "prettier --check .",
+    "format:write": "prettier --write ."
+  },
+  "dependencies": {
+    "@astrojs/mdx": "^6.0.3",
+    "@astrojs/sitemap": "^3.7.3",
+    "@tailwindcss/vite": "^4.3.1",
+    "astro": "^6.4.8",
+    "sharp": "^0.34.4",
+    "tailwindcss": "^4.3.1"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.9",
+    "prettier": "^3.7.4",
+    "prettier-plugin-astro": "^0.14.1",
+    "typescript": "^5.9.3"
+  },
+  "packageManager": "pnpm@11.7.0"
+}

@@ -1,0 +1,48 @@
+---
+import { formatDate, getWorkPath, labelForType, type Work } from '../lib/works';
+import { withBase } from '../lib/site';
+
+interface Props {
+  work: Work;
+  priority?: boolean;
+}
+
+const { work, priority = false } = Astro.props;
+---
+
+<article class="group">
+  <a class="focus-ring block rounded-lg" href={withBase(getWorkPath(work))}>
+    <div
+      class="aspect-[4/3] overflow-hidden rounded-lg border border-[var(--line)] bg-[var(--surface)]"
+    >
+      <img
+        class="h-full w-full object-cover transition duration-500 group-hover:scale-[1.035]"
+        src={withBase(work.data.thumbnail)}
+        alt={work.data.thumbnailAlt}
+        loading={priority ? 'eager' : 'lazy'}
+        decoding="async"
+      />
+    </div>
+    <div class="mt-4 flex items-start justify-between gap-4">
+      <div>
+        <p
+          class="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--accent-ink)]"
+        >
+          {labelForType(work.data.type)}
+        </p>
+        <h2 class="mt-2 text-xl font-semibold leading-tight text-[var(--ink)]">
+          {work.data.title}
+        </h2>
+        <p class="mt-2 line-clamp-2 text-sm leading-6 text-[var(--muted)]">
+          {work.data.description}
+        </p>
+      </div>
+      <time
+        class="min-w-fit pt-1 text-xs text-[var(--muted)]"
+        datetime={work.data.createdAt.toISOString()}
+      >
+        {formatDate(work.data.createdAt)}
+      </time>
+    </div>
+  </a>
+</article>

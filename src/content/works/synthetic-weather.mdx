@@ -1,0 +1,42 @@
+---
+title: 'Synthetic Weather Study'
+slug: 'synthetic-weather'
+description: 'A video/embed work using a safe iframe provider and local cover image.'
+type: 'embed'
+status: 'published'
+createdAt: '2026-06-18'
+updatedAt: '2026-06-18'
+thumbnail: '/media/thumbnails/synthetic-weather.webp'
+thumbnailAlt: 'Placeholder cover image for an AI weather video study.'
+heroImage: '/media/images/synthetic-weather.webp'
+heroImageAlt: 'Large placeholder cover image for an AI weather video study.'
+embedUrl: 'https://www.youtube.com/embed/aqz-KE-bpKQ'
+externalUrl: 'https://www.youtube.com/watch?v=aqz-KE-bpKQ'
+tools:
+  - 'ChatGPT'
+  - 'Video generation model'
+  - 'External video host'
+tags:
+  - 'video'
+  - 'embed'
+  - 'motion-study'
+license: 'CC BY-NC 4.0'
+featured: true
+draft: false
+prompts:
+  - 'Create a quiet meteorological simulation study with cloud volumes, rain particles, and no readable interface text.'
+  - 'Export a compressed cover image locally and host the full video externally.'
+provenance:
+  source: 'placeholder'
+  notes: 'The iframe allowlist only renders YouTube embed URLs and Vimeo player URLs.'
+---
+
+## Process
+
+Large video files should stay outside the repository. This entry keeps a local thumbnail,
+a local hero image, an embeddable provider URL, and a normal external link.
+
+## Embed Policy
+
+Not every external host allows embedding. The site only renders iframes for known safe
+embed providers. Other media should use `externalUrl` instead.

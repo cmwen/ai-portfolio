@@ -1,0 +1,19 @@
+---
+import PageHeader from '../components/PageHeader.astro';
+import WorkGrid from '../components/WorkGrid.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getWorksByType } from '../lib/works';
+
+const works = await getWorksByType(['audio']);
+---
+
+<BaseLayout title="Audio" description="AI audio works and sound sketches.">
+  <PageHeader
+    eyebrow="Audio"
+    title="AI audio sketches."
+    description="Short local demos, metadata, and external links for larger audio files."
+  />
+  <section class="mx-auto max-w-7xl px-5 pb-20 lg:px-8">
+    <WorkGrid works={works} />
+  </section>
+</BaseLayout>

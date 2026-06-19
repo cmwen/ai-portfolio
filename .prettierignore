@@ -1,0 +1,7 @@
+dist
+node_modules
+.astro
+pnpm-lock.yaml
+public/media/audio/*.wav
+public/media/images/*.webp
+public/media/thumbnails/*.webp

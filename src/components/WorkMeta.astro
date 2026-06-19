@@ -1,0 +1,62 @@
+---
+import { formatDate, labelForType, type Work } from '../lib/works';
+
+interface Props {
+  work: Work;
+}
+
+const { work } = Astro.props;
+const rows = [
+  ['Type', labelForType(work.data.type)],
+  ['Created', formatDate(work.data.createdAt)],
+  ['Updated', formatDate(work.data.updatedAt)],
+  ['License', work.data.license],
+];
+---
+
+<aside class="rounded-lg border border-[var(--line)] bg-[var(--surface)] p-5">
+  <dl class="grid gap-4 text-sm">
+    {
+      rows.map(([label, value]) => (
+        <div>
+          <dt class="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
+            {label}
+          </dt>
+          <dd class="mt-1 text-[var(--ink)]">{value}</dd>
+        </div>
+      ))
+    }
+  </dl>
+  {
+    work.data.tools.length > 0 && (
+      <div class="mt-6">
+        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
+          Tools
+        </p>
+        <div class="mt-3 flex flex-wrap gap-2">
+          {work.data.tools.map((tool) => (
+            <span class="rounded-full border border-[var(--line)] px-3 py-1 text-xs">
+              {tool}
+            </span>
+          ))}
+        </div>
+      </div>
+    )
+  }
+  {
+    work.data.tags.length > 0 && (
+      <div class="mt-6">
+        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
+          Tags
+        </p>
+        <div class="mt-3 flex flex-wrap gap-2">
+          {work.data.tags.map((tag) => (
+            <span class="rounded-full bg-[color-mix(in_srgb,var(--accent)_12%,transparent)] px-3 py-1 text-xs text-[var(--accent-ink)]">
+              {tag}
+            </span>
+          ))}
+        </div>
+      </div>
+    )
+  }
+</aside>
