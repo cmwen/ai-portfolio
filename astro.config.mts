@@ -10,5 +10,8 @@ export default defineConfig({
   integrations: [mdx(), sitemap()],
   vite: {
     plugins: [tailwindcss()],
+    optimizeDeps: {
+      exclude: ['@jsquash/webp'],
+    },
   },
 });

@@ -9,6 +9,7 @@ export const site = {
     { href: '/', label: 'Gallery' },
     { href: '/images/', label: 'Images' },
     { href: '/experiments/', label: 'Experiments' },
+    { href: '/upload/', label: 'Upload' },
     { href: 'https://cmwen.github.io/', label: 'Blog' },
     { href: 'https://cmwen.github.io/posts/', label: 'Posts' },
     { href: 'https://cmwen.github.io/about/', label: 'About' },

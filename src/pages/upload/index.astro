@@ -1,0 +1,177 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="Upload"
+  description="Private browser-side image upload workflow for the AI Portfolio pipeline."
+>
+  <section class="mx-auto max-w-7xl px-5 py-10 lg:px-8">
+    <div class="max-w-3xl">
+      <p
+        class="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--accent-ink)]"
+      >
+        Private upload
+      </p>
+      <h1 class="mt-4 text-4xl font-semibold tracking-tight sm:text-5xl">
+        Clean an image, commit it, let CI publish it.
+      </h1>
+      <p class="mt-5 max-w-2xl text-base leading-7 text-[var(--muted)]">
+        The browser strips metadata, converts the file to WebP with a WASM
+        encoder, and uploads the result into <code>incoming/images</code>.
+      </p>
+    </div>
+  </section>
+
+  <section
+    class="mx-auto grid max-w-7xl gap-6 px-5 pb-20 lg:grid-cols-[1fr_24rem] lg:px-8"
+  >
+    <form
+      class="rounded-lg border border-[var(--line)] bg-[var(--surface)] p-5 shadow-sm sm:p-6"
+      data-upload-form
+    >
+      <div
+        class="hidden rounded-lg border border-[var(--accent)] bg-[color-mix(in_srgb,var(--accent)_10%,transparent)] px-4 py-3 text-sm text-[var(--accent-ink)]"
+        data-shared-notice
+      >
+        Shared image received from the operating system.
+      </div>
+
+      <label
+        class="mt-0 block rounded-lg border border-dashed border-[var(--line)] bg-[color-mix(in_srgb,var(--bg)_54%,transparent)] p-6 transition"
+        data-dropzone
+      >
+        <span class="block text-lg font-semibold">Choose or drop images</span>
+        <span class="mt-2 block text-sm leading-6 text-[var(--muted)]">
+          JPEG, PNG, WebP, GIF, and AVIF depend on browser decode support. HEIC
+          may need to be exported from the phone first.
+        </span>
+        <input
+          class="mt-5 block w-full cursor-pointer rounded border border-[var(--line)] bg-[var(--surface)] p-3 text-sm"
+          type="file"
+          accept="image/*,.heic,.heif"
+          multiple
+          data-file-input
+        />
+      </label>
+
+      <div class="mt-5 flex flex-wrap gap-3">
+        <button
+          class="focus-ring rounded-full bg-[var(--ink)] px-5 py-3 text-sm font-semibold text-[var(--bg)] disabled:cursor-not-allowed disabled:opacity-45"
+          type="button"
+          data-prepare
+        >
+          Prepare WebP
+        </button>
+        <button
+          class="focus-ring rounded-full bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-45"
+          type="button"
+          data-upload
+        >
+          Upload to GitHub
+        </button>
+      </div>
+
+      <p
+        class="mt-5 rounded-lg border border-[var(--line)] px-4 py-3 text-sm text-[var(--muted)] data-[tone=error]:border-red-400 data-[tone=error]:text-red-700 data-[tone=ok]:border-[var(--accent)] data-[tone=ok]:text-[var(--accent-ink)]"
+        data-status
+      >
+        Ready.
+      </p>
+
+      <div class="mt-6 grid gap-4" data-prepared-list></div>
+    </form>
+
+    <aside class="space-y-6">
+      <section
+        class="rounded-lg border border-[var(--line)] bg-[var(--surface)] p-5"
+      >
+        <h2 class="text-lg font-semibold">GitHub target</h2>
+        <div class="mt-4 grid gap-4">
+          <label class="grid gap-2 text-sm">
+            <span class="font-medium">Owner</span>
+            <input
+              class="focus-ring rounded border border-[var(--line)] bg-[var(--bg)] px-3 py-2"
+              type="text"
+              autocomplete="off"
+              data-owner
+            />
+          </label>
+          <label class="grid gap-2 text-sm">
+            <span class="font-medium">Repo</span>
+            <input
+              class="focus-ring rounded border border-[var(--line)] bg-[var(--bg)] px-3 py-2"
+              type="text"
+              autocomplete="off"
+              data-repo
+            />
+          </label>
+          <label class="grid gap-2 text-sm">
+            <span class="font-medium">Branch</span>
+            <input
+              class="focus-ring rounded border border-[var(--line)] bg-[var(--bg)] px-3 py-2"
+              type="text"
+              autocomplete="off"
+              data-branch
+            />
+          </label>
+          <label class="grid gap-2 text-sm">
+            <span class="font-medium">Directory</span>
+            <input
+              class="focus-ring rounded border border-[var(--line)] bg-[var(--bg)] px-3 py-2"
+              type="text"
+              autocomplete="off"
+              data-directory
+            />
+          </label>
+          <label class="grid gap-2 text-sm">
+            <span class="font-medium">Fine-grained PAT</span>
+            <input
+              class="focus-ring rounded border border-[var(--line)] bg-[var(--bg)] px-3 py-2"
+              type="password"
+              autocomplete="off"
+              placeholder="Contents: write"
+              data-token
+            />
+          </label>
+        </div>
+        <div class="mt-5 flex flex-wrap gap-3">
+          <button
+            class="focus-ring rounded-full border border-[var(--line)] px-4 py-2 text-sm font-semibold"
+            type="button"
+            data-save-settings
+          >
+            Save
+          </button>
+          <button
+            class="focus-ring rounded-full border border-[var(--line)] px-4 py-2 text-sm font-semibold text-[var(--muted)]"
+            type="button"
+            data-clear-token
+          >
+            Clear token
+          </button>
+        </div>
+      </section>
+
+      <section
+        class="rounded-lg border border-[var(--line)] bg-[var(--surface)] p-5"
+      >
+        <h2 class="text-lg font-semibold">Mobile share</h2>
+        <p
+          class="mt-3 text-sm leading-6 text-[var(--muted)]"
+          data-install-state
+        >
+          Checking install state.
+        </p>
+        <p class="mt-3 text-sm leading-6 text-[var(--muted)]">
+          Install this page, then share an image to <strong>AI Upload</strong>
+          from the Android share sheet.
+        </p>
+      </section>
+    </aside>
+  </section>
+</BaseLayout>
+
+<script>
+  import '../../scripts/upload';
+</script>

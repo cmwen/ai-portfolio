@@ -1,0 +1,49 @@
+{
+  "name": "AI Portfolio Upload",
+  "short_name": "AI Upload",
+  "description": "Upload cleaned image assets into the AI Portfolio publishing pipeline.",
+  "id": "/ai-portfolio/",
+  "start_url": "/ai-portfolio/upload/",
+  "scope": "/ai-portfolio/",
+  "display": "standalone",
+  "background_color": "#f7f7f4",
+  "theme_color": "#0d9488",
+  "icons": [
+    {
+      "src": "/ai-portfolio/media/thumbnails/latent-harbor.webp",
+      "sizes": "512x512",
+      "type": "image/webp",
+      "purpose": "any"
+    }
+  ],
+  "share_target": {
+    "action": "/ai-portfolio/upload/share",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url",
+      "files": [
+        {
+          "name": "media",
+          "accept": [
+            "image/jpeg",
+            "image/png",
+            "image/webp",
+            "image/gif",
+            "image/avif",
+            ".jpg",
+            ".jpeg",
+            ".png",
+            ".webp",
+            ".gif",
+            ".avif",
+            ".heic",
+            ".heif"
+          ]
+        }
+      ]
+    }
+  }
+}

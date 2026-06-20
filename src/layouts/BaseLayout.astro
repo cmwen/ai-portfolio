@@ -22,6 +22,10 @@ const canonical = new URL(
   Astro.url.pathname,
   'https://cmwen.github.io',
 ).toString();
+const manifest = withBase('/manifest.webmanifest');
+const icon = withBase('/media/thumbnails/latent-harbor.webp');
+const serviceWorker = withBase('/sw.js');
+const serviceWorkerScope = import.meta.env.BASE_URL;
 ---
 
 <!doctype html>
@@ -40,6 +44,9 @@ const canonical = new URL(
     <meta property="og:url" content={canonical} />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="theme-color" content="#0d9488" />
+    <link rel="manifest" href={manifest} />
+    <link rel="icon" type="image/webp" href={icon} />
+    <link rel="apple-touch-icon" href={icon} />
   </head>
   <body>
     <Header />
@@ -47,5 +54,14 @@ const canonical = new URL(
       <slot />
     </main>
     <Footer />
+    <script is:inline define:vars={{ serviceWorker, serviceWorkerScope }}>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register(serviceWorker, {
+            scope: serviceWorkerScope,
+          });
+        });
+      }
+    </script>
   </body>
 </html>
