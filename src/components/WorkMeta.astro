@@ -1,5 +1,11 @@
 ---
-import { formatDate, labelForType, type Work } from '../lib/works';
+import {
+  formatDate,
+  labelForCategory,
+  labelForPage,
+  labelForType,
+  type Work,
+} from '../lib/works';
 
 interface Props {
   work: Work;
@@ -7,6 +13,8 @@ interface Props {
 
 const { work } = Astro.props;
 const rows = [
+  ['Page', labelForPage(work.data.page)],
+  ['Category', labelForCategory(work.data.category)],
   ['Type', labelForType(work.data.type)],
   ['Created', formatDate(work.data.createdAt)],
   ['Updated', formatDate(work.data.updatedAt)],
@@ -27,6 +35,16 @@ const rows = [
       ))
     }
   </dl>
+  {
+    work.data.aiTool && (
+      <div class="mt-6">
+        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
+          AI tool
+        </p>
+        <p class="mt-2 text-sm text-[var(--ink)]">{work.data.aiTool}</p>
+      </div>
+    )
+  }
   {
     work.data.tools.length > 0 && (
       <div class="mt-6">

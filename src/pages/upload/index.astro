@@ -4,7 +4,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
 <BaseLayout
   title="Upload"
-  description="Private browser-side image upload workflow for the AI Portfolio pipeline."
+  description="Private browser-side upload workflow for the AI Portfolio pipeline."
 >
   <section class="mx-auto max-w-7xl px-5 py-10 lg:px-8">
     <div class="max-w-3xl">
@@ -14,11 +14,12 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         Private upload
       </p>
       <h1 class="mt-4 text-4xl font-semibold tracking-tight sm:text-5xl">
-        Clean an image, commit it, let CI publish it.
+        Clean media, add metadata, route it to the right page.
       </h1>
       <p class="mt-5 max-w-2xl text-base leading-7 text-[var(--muted)]">
         The browser strips metadata, converts the file to WebP with a WASM
-        encoder, and uploads the result into <code>incoming/images</code>.
+        encoder, and uploads the result with a JSON sidecar for the build
+        pipeline.
       </p>
     </div>
   </section>
@@ -54,6 +55,123 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           data-file-input
         />
       </label>
+
+      <section
+        class="mt-5 grid gap-5 rounded-lg border border-[var(--line)] bg-[color-mix(in_srgb,var(--surface)_70%,transparent)] p-4"
+        aria-label="Publish metadata"
+      >
+        <div>
+          <p class="text-sm font-semibold">Destination page</p>
+          <div class="mt-3 grid gap-3 sm:grid-cols-2">
+            <label
+              class="focus-within:ring-2 focus-within:ring-[var(--accent)] rounded-lg border border-[var(--line)] bg-[var(--bg)] p-4"
+            >
+              <input
+                class="sr-only"
+                type="radio"
+                name="page"
+                value="design"
+                data-page
+                checked
+              />
+              <span class="block text-sm font-semibold">Designs</span>
+              <span class="mt-1 block text-sm leading-6 text-[var(--muted)]">
+                Icon, image, UX, identity, collection.
+              </span>
+            </label>
+            <label
+              class="focus-within:ring-2 focus-within:ring-[var(--accent)] rounded-lg border border-[var(--line)] bg-[var(--bg)] p-4"
+            >
+              <input
+                class="sr-only"
+                type="radio"
+                name="page"
+                value="content"
+                data-page
+              />
+              <span class="block text-sm font-semibold">Contents</span>
+              <span class="mt-1 block text-sm leading-6 text-[var(--muted)]">
+                Poster, comic, video, audio, embed.
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <div class="grid gap-4 sm:grid-cols-2">
+          <label class="grid gap-2 text-sm">
+            <span class="font-medium">Category</span>
+            <select
+              class="focus-ring rounded border border-[var(--line)] bg-[var(--bg)] px-3 py-2"
+              data-category></select>
+          </label>
+          <label class="grid gap-2 text-sm">
+            <span class="font-medium">AI tool</span>
+            <select
+              class="focus-ring rounded border border-[var(--line)] bg-[var(--bg)] px-3 py-2"
+              data-ai-tool
+            >
+              <option value="ChatGPT">ChatGPT</option>
+              <option value="Gemini">Gemini</option>
+              <option value="Midjourney">Midjourney</option>
+              <option value="Runway">Runway</option>
+              <option value="manual">Manual entry</option>
+            </select>
+          </label>
+          <label
+            class="grid gap-2 text-sm sm:col-span-2"
+            data-ai-tool-manual-wrap
+          >
+            <span class="font-medium">Manual AI tool</span>
+            <input
+              class="focus-ring rounded border border-[var(--line)] bg-[var(--bg)] px-3 py-2"
+              type="text"
+              autocomplete="off"
+              placeholder="Kling, Veo, ComfyUI workflow..."
+              data-ai-tool-manual
+            />
+          </label>
+        </div>
+
+        <div class="grid gap-4 sm:grid-cols-2">
+          <label class="grid gap-2 text-sm">
+            <span class="font-medium">Title</span>
+            <input
+              class="focus-ring rounded border border-[var(--line)] bg-[var(--bg)] px-3 py-2"
+              type="text"
+              autocomplete="off"
+              placeholder="Leave blank to use filename"
+              data-title
+            />
+          </label>
+          <label class="grid gap-2 text-sm">
+            <span class="font-medium">Tags</span>
+            <input
+              class="focus-ring rounded border border-[var(--line)] bg-[var(--bg)] px-3 py-2"
+              type="text"
+              autocomplete="off"
+              placeholder="ai-generated, concept, draft"
+              data-tags
+            />
+          </label>
+          <label class="grid gap-2 text-sm sm:col-span-2">
+            <span class="font-medium">Description</span>
+            <textarea
+              class="focus-ring min-h-24 rounded border border-[var(--line)] bg-[var(--bg)] px-3 py-2"
+              placeholder="Short gallery description. The pipeline will use a plain fallback if blank."
+              data-description></textarea>
+          </label>
+          <label class="grid gap-2 text-sm sm:col-span-2">
+            <span class="font-medium">YouTube URL</span>
+            <input
+              class="focus-ring rounded border border-[var(--line)] bg-[var(--bg)] px-3 py-2"
+              type="url"
+              autocomplete="off"
+              placeholder="https://www.youtube.com/watch?v=..."
+              data-youtube-url
+            />
+          </label>
+        </div>
+      </section>
 
       <div class="mt-5 flex flex-wrap gap-3">
         <button
@@ -123,6 +241,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
               autocomplete="off"
               data-directory
             />
+            <span class="text-xs leading-5 text-[var(--muted)]">
+              Auto-switches between incoming/designs/images and
+              incoming/contents/images when the destination page changes.
+            </span>
           </label>
           <label class="grid gap-2 text-sm">
             <span class="font-medium">Fine-grained PAT</span>

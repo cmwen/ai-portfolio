@@ -1,5 +1,5 @@
 ---
-import { isEmbeddable, type Work } from '../lib/works';
+import { getEmbedUrl, type Work } from '../lib/works';
 import { withBase } from '../lib/site';
 
 interface Props {
@@ -9,6 +9,7 @@ interface Props {
 const { work } = Astro.props;
 const data = work.data;
 const heroAlt = data.heroImageAlt ?? data.thumbnailAlt;
+const embedUrl = getEmbedUrl(data.embedUrl);
 ---
 
 <section class="space-y-6">
@@ -25,20 +26,18 @@ const heroAlt = data.heroImageAlt ?? data.thumbnailAlt;
   }
 
   {
-    (data.type === 'embed' || data.type === 'video') &&
-      data.embedUrl &&
-      isEmbeddable(data.embedUrl) && (
-        <div class="aspect-video overflow-hidden rounded-lg border border-[var(--line)] bg-black">
-          <iframe
-            class="h-full w-full"
-            src={data.embedUrl}
-            title={`${data.title} video embed`}
-            loading="lazy"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            allowfullscreen
-          />
-        </div>
-      )
+    (data.type === 'embed' || data.type === 'video') && embedUrl && (
+      <div class="aspect-video overflow-hidden rounded-lg border border-[var(--line)] bg-black">
+        <iframe
+          class="h-full w-full"
+          src={embedUrl}
+          title={`${data.title} video embed`}
+          loading="lazy"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowfullscreen
+        />
+      </div>
+    )
   }
 
   {

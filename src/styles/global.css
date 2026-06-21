@@ -90,3 +90,8 @@ video {
 .focus-ring:focus-visible {
   outline-color: var(--accent);
 }
+
+[data-selected='true'] {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, var(--bg));
+}

@@ -2,7 +2,7 @@
 import PageHeader from '../components/PageHeader.astro';
 import WorkGrid from '../components/WorkGrid.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { site, withBase } from '../lib/site';
+import { withBase } from '../lib/site';
 import { getFeaturedWorks } from '../lib/works';
 
 const featuredWorks = await getFeaturedWorks();
@@ -16,28 +16,28 @@ const featuredWorks = await getFeaturedWorks();
       <p
         class="text-sm font-semibold uppercase tracking-[0.22em] text-[var(--accent-ink)]"
       >
-        Min Wen's AI side projects
+        Min Wen's AI collection
       </p>
       <h1 class="mt-5 text-5xl font-semibold leading-none md:text-7xl">
-        Things I build with AI, kept as a progress record.
+        AI designs and AI content, kept in two clean shelves.
       </h1>
       <p class="mt-6 max-w-2xl text-lg leading-8 text-[var(--muted)]">
-        This is the lightweight companion to my main blog: a place for generated
-        images, media experiments, and small artifacts that are worth keeping
-        without turning each one into a full article.
+        Designs are visual/UI artifacts like icons, image studies, UX concepts,
+        and systems. Contents are media outputs like posters, comics, video,
+        audio, and embeds.
       </p>
       <div class="mt-8 flex flex-wrap gap-3">
         <a
           class="focus-ring rounded-full bg-[var(--ink)] px-5 py-3 text-sm font-semibold text-[var(--bg)]"
-          href={withBase('/works/')}
+          href={withBase('/designs/')}
         >
-          View works
+          View designs
         </a>
         <a
           class="focus-ring rounded-full border border-[var(--line)] bg-[var(--surface)] px-5 py-3 text-sm font-semibold"
-          href={site.mainBlogUrl}
+          href={withBase('/contents/')}
         >
-          Main blog
+          View contents
         </a>
       </div>
     </div>
@@ -63,7 +63,7 @@ const featuredWorks = await getFeaturedWorks();
           Latest records
         </p>
         <h2 class="mt-3 text-3xl font-semibold md:text-4xl">
-          Selected AI builds
+          Selected AI artifacts
         </h2>
       </div>
       <a
@@ -78,7 +78,7 @@ const featuredWorks = await getFeaturedWorks();
 
   <PageHeader
     eyebrow="Low-friction workflow"
-    title="Drop images into the repo. Let the site make the landing pages."
-    description="Put exported ChatGPT, Gemini, or other generated images in incoming/images. The build script creates optimized web images, thumbnails, and simple MDX records automatically."
+    title="Upload once, route it to the right shelf."
+    description="The upload page records the destination page, content category, AI tool, tags, and optional YouTube URL. The build script turns that into optimized media, thumbnails, embeds, and MDX records."
   />
 </BaseLayout>

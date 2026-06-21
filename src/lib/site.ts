@@ -1,14 +1,15 @@
 export const site = {
   title: 'AI Portfolio',
   description:
-    'A lightweight side portfolio for AI-built images, experiments, and progress notes by Min Wen.',
+    'A lightweight side portfolio for AI-built designs and content by Min Wen.',
   owner: 'Min Wen',
   url: 'https://cmwen.github.io/ai-portfolio/',
   mainBlogUrl: 'https://cmwen.github.io/',
   nav: [
-    { href: '/', label: 'Gallery' },
-    { href: '/images/', label: 'Images' },
-    { href: '/experiments/', label: 'Experiments' },
+    { href: '/', label: 'Home' },
+    { href: '/designs/', label: 'Designs' },
+    { href: '/contents/', label: 'Contents' },
+    { href: '/works/', label: 'All' },
     { href: '/upload/', label: 'Upload' },
     { href: 'https://cmwen.github.io/', label: 'Blog' },
     { href: 'https://cmwen.github.io/posts/', label: 'Posts' },

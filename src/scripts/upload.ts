@@ -8,6 +8,18 @@ type UploadSettings = {
   token: string;
 };
 
+type UploadPage = 'design' | 'content';
+
+type ContentMetadata = {
+  page: UploadPage;
+  category: string;
+  title: string;
+  description: string;
+  aiTool: string;
+  tags: string[];
+  youtubeUrl: string;
+};
+
 type PreparedImage = {
   sourceName: string;
   outputName: string;
@@ -33,6 +45,11 @@ const storageKeys = {
   branch: 'aiPortfolio.githubBranch',
   directory: 'aiPortfolio.githubDirectory',
   token: 'aiPortfolio.githubToken',
+  page: 'aiPortfolio.uploadPage',
+  category: 'aiPortfolio.uploadCategory',
+  aiTool: 'aiPortfolio.aiTool',
+  aiToolManual: 'aiPortfolio.aiToolManual',
+  tags: 'aiPortfolio.uploadTags',
 };
 
 const shareDb = {
@@ -46,7 +63,28 @@ const defaults = {
   owner: 'cmwen',
   repo: 'ai-portfolio',
   branch: 'main',
-  directory: 'incoming/images',
+  directory: 'incoming/designs/images',
+  page: 'design' as UploadPage,
+  category: 'image',
+  aiTool: 'ChatGPT',
+};
+
+const directoryByPage: Record<UploadPage, string> = {
+  content: 'incoming/contents/images',
+  design: 'incoming/designs/images',
+};
+
+const categoriesByPage: Record<UploadPage, string[]> = {
+  content: ['poster', 'comic', 'video', 'audio', 'embed', 'article', 'other'],
+  design: [
+    'icon',
+    'image',
+    'ux',
+    'identity',
+    'collection',
+    'prototype',
+    'other',
+  ],
 };
 
 const maxWidth = 1800;
@@ -61,6 +99,24 @@ const repoInput = document.querySelector<HTMLInputElement>('[data-repo]');
 const branchInput = document.querySelector<HTMLInputElement>('[data-branch]');
 const directoryInput =
   document.querySelector<HTMLInputElement>('[data-directory]');
+const pageInputs = Array.from(
+  document.querySelectorAll<HTMLInputElement>('[data-page]'),
+);
+const categoryInput =
+  document.querySelector<HTMLSelectElement>('[data-category]');
+const aiToolInput = document.querySelector<HTMLSelectElement>('[data-ai-tool]');
+const aiToolManualWrap = document.querySelector<HTMLElement>(
+  '[data-ai-tool-manual-wrap]',
+);
+const aiToolManualInput = document.querySelector<HTMLInputElement>(
+  '[data-ai-tool-manual]',
+);
+const titleInput = document.querySelector<HTMLInputElement>('[data-title]');
+const descriptionInput =
+  document.querySelector<HTMLTextAreaElement>('[data-description]');
+const tagsInput = document.querySelector<HTMLInputElement>('[data-tags]');
+const youtubeUrlInput =
+  document.querySelector<HTMLInputElement>('[data-youtube-url]');
 const saveSettingsButton = document.querySelector<HTMLButtonElement>(
   '[data-save-settings]',
 );
@@ -88,11 +144,23 @@ setInstallState();
 function registerUiEvents() {
   saveSettingsButton?.addEventListener('click', () => {
     const settings = readSettings();
+    const metadata = readContentMetadata();
     localStorage.setItem(storageKeys.owner, settings.owner);
     localStorage.setItem(storageKeys.repo, settings.repo);
     localStorage.setItem(storageKeys.branch, settings.branch);
     localStorage.setItem(storageKeys.directory, settings.directory);
     localStorage.setItem(storageKeys.token, settings.token);
+    localStorage.setItem(storageKeys.page, metadata.page);
+    localStorage.setItem(storageKeys.category, metadata.category);
+    localStorage.setItem(
+      storageKeys.aiTool,
+      aiToolInput?.value ?? defaults.aiTool,
+    );
+    localStorage.setItem(
+      storageKeys.aiToolManual,
+      aiToolManualInput?.value.trim() ?? '',
+    );
+    localStorage.setItem(storageKeys.tags, tagsInput?.value.trim() ?? '');
     setStatus('Settings saved in this browser.', 'ok');
   });
 
@@ -132,9 +200,43 @@ function registerUiEvents() {
     dropzone.classList.remove('border-[var(--accent)]');
     await prepareFiles(Array.from(event.dataTransfer?.files ?? []));
   });
+
+  for (const pageInput of pageInputs) {
+    pageInput.addEventListener('change', () => {
+      if (!pageInput.checked) return;
+      updateCategoryOptions(pageInput.value as UploadPage);
+      updateSelectedPageCards();
+      syncDirectoryForPage(pageInput.value as UploadPage);
+    });
+  }
+
+  aiToolInput?.addEventListener('change', updateManualToolVisibility);
 }
 
 function hydrateSettings() {
+  const page = readStoredPage();
+  setPage(page);
+  updateCategoryOptions(page);
+  updateSelectedPageCards();
+
+  if (categoryInput) {
+    const storedCategory =
+      localStorage.getItem(storageKeys.category) ?? defaults.category;
+    categoryInput.value = categoriesByPage[page].includes(storedCategory)
+      ? storedCategory
+      : categoriesByPage[page][0];
+  }
+
+  if (aiToolInput) {
+    aiToolInput.value =
+      localStorage.getItem(storageKeys.aiTool) ?? defaults.aiTool;
+  }
+  if (aiToolManualInput) {
+    aiToolManualInput.value =
+      localStorage.getItem(storageKeys.aiToolManual) ?? '';
+  }
+  if (tagsInput) tagsInput.value = localStorage.getItem(storageKeys.tags) ?? '';
+
   if (ownerInput)
     ownerInput.value =
       localStorage.getItem(storageKeys.owner) ?? defaults.owner;
@@ -145,10 +247,12 @@ function hydrateSettings() {
       localStorage.getItem(storageKeys.branch) ?? defaults.branch;
   if (directoryInput) {
     directoryInput.value =
-      localStorage.getItem(storageKeys.directory) ?? defaults.directory;
+      localStorage.getItem(storageKeys.directory) ?? directoryByPage[page];
   }
   if (tokenInput)
     tokenInput.value = localStorage.getItem(storageKeys.token) ?? '';
+
+  updateManualToolVisibility();
 }
 
 async function prepareFiles(files: File[]) {
@@ -264,6 +368,7 @@ async function uploadPreparedImages() {
   }
 
   const settings = readSettings();
+  const metadata = readContentMetadata();
 
   if (!settings.token) {
     setStatus(
@@ -281,6 +386,14 @@ async function uploadPreparedImages() {
     localStorage.setItem(storageKeys.branch, settings.branch);
     localStorage.setItem(storageKeys.directory, settings.directory);
     localStorage.setItem(storageKeys.token, settings.token);
+    localStorage.setItem(storageKeys.page, metadata.page);
+    localStorage.setItem(storageKeys.category, metadata.category);
+    localStorage.setItem(storageKeys.aiTool, aiToolInput?.value ?? '');
+    localStorage.setItem(
+      storageKeys.aiToolManual,
+      aiToolManualInput?.value.trim() ?? '',
+    );
+    localStorage.setItem(storageKeys.tags, tagsInput?.value.trim() ?? '');
 
     const createdUrls: string[] = [];
 
@@ -288,12 +401,18 @@ async function uploadPreparedImages() {
       setStatus(`Uploading ${image.outputName}...`, 'loading');
       const response = await putFile(settings, image);
       createdUrls.push(response.content?.html_url ?? response.commit?.html_url);
+
+      setStatus(`Uploading metadata for ${image.outputName}...`, 'loading');
+      const metadataResponse = await putMetadataFile(settings, image, metadata);
+      createdUrls.push(
+        metadataResponse.content?.html_url ?? metadataResponse.commit?.html_url,
+      );
     }
 
     renderLinks(createdUrls.filter(Boolean));
     setStatus(
-      `Uploaded ${createdUrls.length} image${
-        createdUrls.length === 1 ? '' : 's'
+      `Uploaded ${preparedImages.length} image${
+        preparedImages.length === 1 ? '' : 's'
       }. GitHub Actions will publish the processed gallery next.`,
       'ok',
     );
@@ -306,13 +425,70 @@ async function uploadPreparedImages() {
 
 async function putFile(settings: UploadSettings, image: PreparedImage) {
   const path = `${trimSlashes(settings.directory)}/${image.outputName}`;
+  const content = await blobToBase64(image.blob);
+
+  return putBase64File({
+    settings,
+    path,
+    content,
+    message: `Add uploaded image ${image.outputName}`,
+  });
+}
+
+async function putMetadataFile(
+  settings: UploadSettings,
+  image: PreparedImage,
+  metadata: ContentMetadata,
+) {
+  const path = `${trimSlashes(settings.directory)}/${metadataFileName(
+    image.outputName,
+  )}`;
+  const payload = {
+    version: 1,
+    page: metadata.page,
+    category: metadata.category,
+    title: metadata.title,
+    description: metadata.description,
+    type: metadata.youtubeUrl ? 'embed' : 'image',
+    aiTool: metadata.aiTool,
+    tools: metadata.aiTool ? [metadata.aiTool] : [],
+    tags: Array.from(
+      new Set(['ai-generated', metadata.category, ...metadata.tags]),
+    ),
+    youtubeUrl: metadata.youtubeUrl,
+    sourceName: image.sourceName,
+    outputName: image.outputName,
+    uploadedAt: new Date().toISOString(),
+    width: image.width,
+    height: image.height,
+  };
+  const content = textToBase64(`${JSON.stringify(payload, null, 2)}\n`);
+
+  return putBase64File({
+    settings,
+    path,
+    content,
+    message: `Add upload metadata for ${image.outputName}`,
+  });
+}
+
+async function putBase64File({
+  settings,
+  path,
+  content,
+  message,
+}: {
+  settings: UploadSettings;
+  path: string;
+  content: string;
+  message: string;
+}) {
   const endpoint = `https://api.github.com/repos/${encodeURIComponent(
     settings.owner,
   )}/${encodeURIComponent(settings.repo)}/contents/${path
     .split('/')
     .map(encodeURIComponent)
     .join('/')}`;
-  const content = await blobToBase64(image.blob);
   const response = await fetch(endpoint, {
     method: 'PUT',
     headers: {
@@ -323,7 +499,7 @@ async function putFile(settings: UploadSettings, image: PreparedImage) {
     },
     body: JSON.stringify({
       branch: settings.branch,
-      message: `Add uploaded image ${image.outputName}`,
+      message,
       content,
     }),
   });
@@ -352,6 +528,18 @@ async function blobToBase64(blob: Blob) {
   return btoa(binary);
 }
 
+function textToBase64(value: string) {
+  const bytes = new TextEncoder().encode(value);
+  let binary = '';
+  const chunkSize = 0x8000;
+
+  for (let index = 0; index < bytes.length; index += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(index, index + chunkSize));
+  }
+
+  return btoa(binary);
+}
+
 function readSettings(): UploadSettings {
   return {
     owner: cleanInput(ownerInput?.value) || defaults.owner,
@@ -361,6 +549,23 @@ function readSettings(): UploadSettings {
       cleanInput(directoryInput?.value) || defaults.directory,
     ),
     token: tokenInput?.value.trim() ?? '',
+  };
+}
+
+function readContentMetadata(): ContentMetadata {
+  const page = readSelectedPage();
+  const category =
+    cleanInput(categoryInput?.value) || categoriesByPage[page][0];
+  const aiTool = readAiTool();
+
+  return {
+    page,
+    category,
+    title: cleanInput(titleInput?.value),
+    description: cleanInput(descriptionInput?.value),
+    aiTool,
+    tags: parseTags(tagsInput?.value ?? ''),
+    youtubeUrl: normalizeYouTubeUrl(cleanInput(youtubeUrlInput?.value)),
   };
 }
 
@@ -422,6 +627,9 @@ function renderPreparedImages() {
           <div class="min-w-0">
             <h3 class="truncate text-base font-semibold">${escapeHtml(image.outputName)}</h3>
             <p class="mt-2 text-sm text-[var(--muted)]">${escapeHtml(image.sourceName)}</p>
+            <p class="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--accent-ink)]">${escapeHtml(
+              previewMetadataLabel(),
+            )}</p>
             <dl class="mt-4 grid grid-cols-2 gap-3 text-sm">
               <div>
                 <dt class="text-[var(--muted)]">Output</dt>
@@ -468,6 +676,109 @@ function renderLinks(urls: string[]) {
 function setBusy(isBusy: boolean) {
   if (prepareButton) prepareButton.disabled = isBusy;
   if (uploadButton) uploadButton.disabled = isBusy;
+}
+
+function setPage(page: UploadPage) {
+  for (const input of pageInputs) {
+    input.checked = input.value === page;
+  }
+}
+
+function readStoredPage(): UploadPage {
+  const stored = localStorage.getItem(storageKeys.page);
+  return stored === 'content' || stored === 'design' ? stored : defaults.page;
+}
+
+function readSelectedPage(): UploadPage {
+  const checked = pageInputs.find((input) => input.checked);
+  return checked?.value === 'content' ? 'content' : 'design';
+}
+
+function updateCategoryOptions(page: UploadPage) {
+  if (!categoryInput) return;
+
+  const current =
+    categoryInput.value || localStorage.getItem(storageKeys.category);
+  categoryInput.innerHTML = categoriesByPage[page]
+    .map(
+      (category) =>
+        `<option value="${escapeAttribute(category)}">${escapeHtml(
+          titleize(category),
+        )}</option>`,
+    )
+    .join('');
+  categoryInput.value =
+    current && categoriesByPage[page].includes(current)
+      ? current
+      : categoriesByPage[page][0];
+}
+
+function updateSelectedPageCards() {
+  for (const input of pageInputs) {
+    input
+      .closest('label')
+      ?.setAttribute('data-selected', String(input.checked));
+  }
+}
+
+function syncDirectoryForPage(page: UploadPage) {
+  if (!directoryInput) return;
+
+  const knownDirectories = new Set([
+    defaults.directory,
+    'incoming/images',
+    ...Object.values(directoryByPage),
+  ]);
+  const current = trimSlashes(directoryInput.value);
+  if (!current || knownDirectories.has(current)) {
+    directoryInput.value = directoryByPage[page];
+  }
+}
+
+function updateManualToolVisibility() {
+  const isManual = aiToolInput?.value === 'manual';
+  aiToolManualWrap?.classList.toggle('hidden', !isManual);
+}
+
+function readAiTool() {
+  const selected = aiToolInput?.value || defaults.aiTool;
+
+  if (selected === 'manual') {
+    return cleanInput(aiToolManualInput?.value);
+  }
+
+  return selected;
+}
+
+function previewMetadataLabel() {
+  const metadata = readContentMetadata();
+  const tool = metadata.aiTool ? ` / ${metadata.aiTool}` : '';
+  return `${metadata.page} / ${metadata.category}${tool}`;
+}
+
+function parseTags(value: string) {
+  return value
+    .split(',')
+    .map((tag) => tag.trim().toLowerCase())
+    .filter(Boolean);
+}
+
+function normalizeYouTubeUrl(value: string) {
+  if (!value) return '';
+
+  try {
+    const parsed = new URL(value);
+    if (
+      parsed.hostname === 'youtu.be' ||
+      parsed.hostname.endsWith('youtube.com')
+    ) {
+      return parsed.toString();
+    }
+  } catch {
+    return '';
+  }
+
+  return '';
 }
 
 function setStatus(message: string, tone: 'loading' | 'ok' | 'error') {
@@ -518,6 +829,10 @@ function trimSlashes(value: string) {
   return value.replace(/^\/+|\/+$/g, '');
 }
 
+function metadataFileName(outputName: string) {
+  return `${outputName.replace(/\.[^.]+$/, '')}.json`;
+}
+
 function formatBytes(bytes: number) {
   if (bytes < 1024) return `${bytes} B`;
   const kilobytes = bytes / 1024;
@@ -559,4 +874,12 @@ function escapeHtml(value: string) {
 
 function escapeAttribute(value: string) {
   return escapeHtml(value);
+}
+
+function titleize(value: string) {
+  return value
+    .replace(/[_-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/\b[a-z]/g, (letter) => letter.toUpperCase());
 }

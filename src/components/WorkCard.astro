@@ -1,5 +1,11 @@
 ---
-import { formatDate, getWorkPath, labelForType, type Work } from '../lib/works';
+import {
+  formatDate,
+  getWorkPath,
+  labelForCategory,
+  labelForPage,
+  type Work,
+} from '../lib/works';
 import { withBase } from '../lib/site';
 
 interface Props {
@@ -28,7 +34,9 @@ const { work, priority = false } = Astro.props;
         <p
           class="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--accent-ink)]"
         >
-          {labelForType(work.data.type)}
+          {labelForPage(work.data.page)} / {
+            labelForCategory(work.data.category)
+          }
         </p>
         <h2 class="mt-2 text-xl font-semibold leading-tight text-[var(--ink)]">
           {work.data.title}
