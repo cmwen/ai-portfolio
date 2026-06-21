@@ -110,7 +110,7 @@ async function syncImageSource(source) {
     const parsed = parseSourceName(file, metadata);
     const slug = parsed.slug;
     const date =
-      parsed.date ?? dateFromMetadata(metadata) ?? toDateOnly(sourceStat.mtime);
+      parsed.date || dateFromMetadata(metadata) || toDateOnly(sourceStat.mtime);
     const updatedAt = toDateOnly(sourceStat.mtime);
     const title = parsed.title;
     const description =
@@ -196,7 +196,7 @@ async function syncManifestSource(source) {
     const parsed = parseSourceName(file, metadata);
     const slug = parsed.slug;
     const date =
-      parsed.date ?? dateFromMetadata(metadata) ?? toDateOnly(sourceStat.mtime);
+      parsed.date || dateFromMetadata(metadata) || toDateOnly(sourceStat.mtime);
     const updatedAt = toDateOnly(sourceStat.mtime);
     const title = parsed.title;
     const youtube = normalizeYouTubeUrl(
@@ -397,10 +397,21 @@ function yamlList(values) {
   return values.map((value) => `  - ${yamlString(value)}`).join('\n');
 }
 
+function yamlListField(name, values) {
+  if (values.length === 0) return `${name}: []`;
+  return `${name}:\n${yamlList(values)}`;
+}
+
 async function shouldWriteMdx(contentPath, checksum) {
   try {
     const existing = await readFile(contentPath, 'utf8');
-    return !existing.includes(`sha256: '${checksum}'`);
+    const hasLegacyEmptyList = /\n(?:tools|tags):\n\[\]\n/.test(existing);
+    const hasBlankCreatedAt = /\ncreatedAt: ''\n/.test(existing);
+    return (
+      !existing.includes(`sha256: '${checksum}'`) ||
+      hasLegacyEmptyList ||
+      hasBlankCreatedAt
+    );
   } catch {
     return true;
   }
@@ -445,10 +456,8 @@ heroImageAlt: ${yamlString(heroImageAlt)}
 embedUrl: ${yamlString(embedUrl)}
 externalUrl: ${yamlString(externalUrl)}
 aiTool: ${yamlString(aiTool)}
-tools:
-${yamlList(tools)}
-tags:
-${yamlList(tags)}
+${yamlListField('tools', tools)}
+${yamlListField('tags', tags)}
 license: 'CC BY-NC 4.0'
 featured: false
 draft: false
