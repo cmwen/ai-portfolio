@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "page": "design",
+  "category": "other",
+  "title": "Game Character",
+  "description": "",
+  "type": "image",
+  "aiTool": "ChatGPT",
+  "tools": [
+    "ChatGPT"
+  ],
+  "tags": [
+    "ai-generated",
+    "other"
+  ],
+  "youtubeUrl": "",
+  "sourceName": "Generated image 1.png",
+  "outputName": "20260627233201-generated-image-1.webp",
+  "uploadedAt": "2026-06-27T23:32:28.482Z",
+  "width": 1536,
+  "height": 1024
+}
