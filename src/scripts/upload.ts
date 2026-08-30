@@ -74,6 +74,11 @@ const directoryByPage: Record<UploadPage, string> = {
   design: 'incoming/designs/images',
 };
 
+const manifestDirectoryByCategory: Record<string, string> = {
+  video: 'incoming/contents/videos',
+  embed: 'incoming/contents/embeds',
+};
+
 const categoriesByPage: Record<UploadPage, string[]> = {
   content: ['poster', 'comic', 'video', 'audio', 'embed', 'article', 'other'],
   design: [
@@ -211,6 +216,9 @@ function registerUiEvents() {
   }
 
   aiToolInput?.addEventListener('change', updateManualToolVisibility);
+  youtubeUrlInput?.addEventListener('input', () => {
+    if (preparedImages.length === 0) updateUploadGuidance();
+  });
 }
 
 function hydrateSettings() {
@@ -259,16 +267,26 @@ async function prepareFiles(files: File[]) {
   const imageFiles = files.filter(isImageFile);
 
   if (imageFiles.length === 0) {
-    setStatus('Choose or share at least one image file.', 'error');
+    clearPreparedImages();
+    if (readContentMetadata().youtubeUrl) {
+      renderPreparedImages();
+      setStatus(
+        'No cover image selected. Upload will create a YouTube video manifest.',
+        'ok',
+      );
+    } else {
+      setStatus(
+        'Choose or share a cover image, or add a valid YouTube URL.',
+        'error',
+      );
+    }
     return;
   }
 
   setBusy(true);
   setStatus('Cleaning metadata and encoding WebP with WASM...', 'loading');
 
-  for (const image of preparedImages.splice(0)) {
-    URL.revokeObjectURL(image.previewUrl);
-  }
+  clearPreparedImages();
 
   try {
     for (const file of imageFiles) {
@@ -362,13 +380,22 @@ function drawToImageData(bitmap: ImageBitmap, width: number, height: number) {
 }
 
 async function uploadPreparedImages() {
-  if (preparedImages.length === 0) {
-    setStatus('Prepare an image before uploading.', 'error');
+  const settings = readSettings();
+  const metadata = readContentMetadata();
+  const rawYouTubeUrl = cleanInput(youtubeUrlInput?.value);
+
+  if (rawYouTubeUrl && !metadata.youtubeUrl) {
+    setStatus('Enter a valid YouTube URL.', 'error');
     return;
   }
 
-  const settings = readSettings();
-  const metadata = readContentMetadata();
+  if (preparedImages.length === 0 && !metadata.youtubeUrl) {
+    setStatus(
+      'Choose or share a cover image, or add a valid YouTube URL.',
+      'error',
+    );
+    return;
+  }
 
   if (!settings.token) {
     setStatus(
@@ -397,23 +424,38 @@ async function uploadPreparedImages() {
 
     const createdUrls: string[] = [];
 
-    for (const image of preparedImages) {
-      setStatus(`Uploading ${image.outputName}...`, 'loading');
-      const response = await putFile(settings, image);
+    if (preparedImages.length === 0) {
+      setStatus('Uploading YouTube video metadata...', 'loading');
+      const response = await putManifestFile(settings, metadata);
       createdUrls.push(response.content?.html_url ?? response.commit?.html_url);
+    } else {
+      for (const image of preparedImages) {
+        setStatus(`Uploading ${image.outputName}...`, 'loading');
+        const response = await putFile(settings, image);
+        createdUrls.push(
+          response.content?.html_url ?? response.commit?.html_url,
+        );
 
-      setStatus(`Uploading metadata for ${image.outputName}...`, 'loading');
-      const metadataResponse = await putMetadataFile(settings, image, metadata);
-      createdUrls.push(
-        metadataResponse.content?.html_url ?? metadataResponse.commit?.html_url,
-      );
+        setStatus(`Uploading metadata for ${image.outputName}...`, 'loading');
+        const metadataResponse = await putMetadataFile(
+          settings,
+          image,
+          metadata,
+        );
+        createdUrls.push(
+          metadataResponse.content?.html_url ??
+            metadataResponse.commit?.html_url,
+        );
+      }
     }
 
     renderLinks(createdUrls.filter(Boolean));
     setStatus(
-      `Uploaded ${preparedImages.length} image${
-        preparedImages.length === 1 ? '' : 's'
-      }. GitHub Actions will publish the processed gallery next.`,
+      preparedImages.length === 0
+        ? 'Uploaded a YouTube video manifest. GitHub Actions will publish the video next.'
+        : `Uploaded ${preparedImages.length} image${
+            preparedImages.length === 1 ? '' : 's'
+          }. GitHub Actions will publish the processed gallery next.`,
       'ok',
     );
   } catch (error) {
@@ -449,7 +491,11 @@ async function putMetadataFile(
     category: metadata.category,
     title: metadata.title,
     description: metadata.description,
-    type: metadata.youtubeUrl ? 'embed' : 'image',
+    type: metadata.youtubeUrl
+      ? metadata.category === 'video'
+        ? 'video'
+        : 'embed'
+      : 'image',
     aiTool: metadata.aiTool,
     tools: metadata.aiTool ? [metadata.aiTool] : [],
     tags: Array.from(
@@ -469,6 +515,41 @@ async function putMetadataFile(
     path,
     content,
     message: `Add upload metadata for ${image.outputName}`,
+  });
+}
+
+async function putManifestFile(
+  settings: UploadSettings,
+  metadata: ContentMetadata,
+) {
+  const type = metadata.category === 'video' ? 'video' : 'embed';
+  const title = metadata.title || 'YouTube video';
+  const outputName = `${timestampSlug()}-${slugify(title)}.json`;
+  const payload = {
+    version: 1,
+    page: metadata.page,
+    category: metadata.category,
+    title,
+    description: metadata.description,
+    type,
+    aiTool: metadata.aiTool,
+    tools: metadata.aiTool ? [metadata.aiTool] : [],
+    tags: Array.from(
+      new Set(['ai-generated', metadata.category, ...metadata.tags]),
+    ),
+    youtubeUrl: metadata.youtubeUrl,
+    uploadedAt: new Date().toISOString(),
+  };
+  const content = textToBase64(`${JSON.stringify(payload, null, 2)}\n`);
+  const directory =
+    manifestDirectoryByCategory[metadata.category] ??
+    manifestDirectoryByCategory.embed;
+
+  return putBase64File({
+    settings,
+    path: `${directory}/${outputName}`,
+    content,
+    message: `Add YouTube ${type} manifest ${outputName}`,
   });
 }
 
@@ -655,6 +736,12 @@ function renderPreparedImages() {
     .join('');
 }
 
+function clearPreparedImages() {
+  for (const image of preparedImages.splice(0)) {
+    URL.revokeObjectURL(image.previewUrl);
+  }
+}
+
 function renderLinks(urls: string[]) {
   if (!listEl || urls.length === 0) return;
 
@@ -735,6 +822,18 @@ function syncDirectoryForPage(page: UploadPage) {
   }
 }
 
+function updateUploadGuidance() {
+  const metadata = readContentMetadata();
+  if (metadata.youtubeUrl) {
+    setStatus(
+      preparedImages.length === 0
+        ? 'YouTube URL ready. A cover image is optional.'
+        : 'YouTube URL ready. The cover image will be uploaded with the embed.',
+      'ok',
+    );
+  }
+}
+
 function updateManualToolVisibility() {
   const isManual = aiToolInput?.value === 'manual';
   aiToolManualWrap?.classList.toggle('hidden', !isManual);
@@ -768,17 +867,27 @@ function normalizeYouTubeUrl(value: string) {
 
   try {
     const parsed = new URL(value);
-    if (
-      parsed.hostname === 'youtu.be' ||
-      parsed.hostname.endsWith('youtube.com')
-    ) {
-      return parsed.toString();
+    const hostname = parsed.hostname.toLowerCase();
+    let videoId = '';
+
+    if (hostname === 'youtu.be') {
+      videoId = parsed.pathname.replace(/^\/+/, '').split('/')[0] ?? '';
+    } else if (hostname === 'www.youtube.com' || hostname === 'youtube.com') {
+      if (parsed.pathname.startsWith('/embed/')) {
+        videoId = parsed.pathname.split('/').filter(Boolean)[1] ?? '';
+      } else if (parsed.pathname.startsWith('/shorts/')) {
+        videoId = parsed.pathname.split('/').filter(Boolean)[1] ?? '';
+      } else {
+        videoId = parsed.searchParams.get('v') ?? '';
+      }
     }
+
+    if (!/^[a-zA-Z0-9_-]{6,}$/.test(videoId)) return '';
+
+    return `https://www.youtube.com/watch?v=${videoId}`;
   } catch {
     return '';
   }
-
-  return '';
 }
 
 function setStatus(message: string, tone: 'loading' | 'ok' | 'error') {

@@ -77,7 +77,9 @@ export function getEmbedUrl(url: string) {
     const parsed = new URL(url);
     const youtubeId = getYouTubeId(parsed);
 
-    if (youtubeId) return `https://www.youtube.com/embed/${youtubeId}`;
+    if (youtubeId && /^[a-zA-Z0-9_-]{6,}$/.test(youtubeId)) {
+      return `https://www.youtube.com/embed/${youtubeId}`;
+    }
     if (parsed.hostname === 'player.vimeo.com') return parsed.toString();
 
     return '';

@@ -119,7 +119,12 @@ async function syncImageSource(source) {
     const fullImagePath = path.join(imageOutDir, `${slug}.webp`);
     const thumbPath = path.join(thumbOutDir, `${slug}.webp`);
     const contentPath = path.join(generatedContentDir, `${slug}.mdx`);
-    const youtube = normalizeYouTubeUrl(metadata.youtubeUrl);
+    const youtube = findYouTubeUrl(
+      metadata.youtubeUrl,
+      metadata.videoUrl,
+      metadata.embedUrl,
+      metadata.externalUrl,
+    );
     const workType = inferType(metadata.type, youtube);
 
     await sharp(sourcePath)
@@ -199,8 +204,11 @@ async function syncManifestSource(source) {
       parsed.date || dateFromMetadata(metadata) || toDateOnly(sourceStat.mtime);
     const updatedAt = toDateOnly(sourceStat.mtime);
     const title = parsed.title;
-    const youtube = normalizeYouTubeUrl(
-      metadata.youtubeUrl ?? metadata.externalUrl,
+    const youtube = findYouTubeUrl(
+      metadata.youtubeUrl,
+      metadata.videoUrl,
+      metadata.embedUrl,
+      metadata.externalUrl,
     );
     const thumbnail =
       cleanString(metadata.thumbnail) || youtube?.thumbnailUrl || '';
@@ -291,9 +299,18 @@ function parseSourceName(file, metadata = {}) {
 }
 
 function inferType(type, youtube) {
+  if (youtube) return type === 'video' ? 'video' : 'embed';
   if (typeof type === 'string' && allowedTypes.has(type)) return type;
-  if (youtube) return 'embed';
   return 'image';
+}
+
+function findYouTubeUrl(...values) {
+  for (const value of values) {
+    const youtube = normalizeYouTubeUrl(value);
+    if (youtube) return youtube;
+  }
+
+  return null;
 }
 
 function validPage(page, fallback) {

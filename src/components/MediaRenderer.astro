@@ -9,7 +9,10 @@ interface Props {
 const { work } = Astro.props;
 const data = work.data;
 const heroAlt = data.heroImageAlt ?? data.thumbnailAlt;
-const embedUrl = getEmbedUrl(data.embedUrl);
+const embedUrl =
+  getEmbedUrl(data.embedUrl) ||
+  getEmbedUrl(data.videoUrl) ||
+  getEmbedUrl(data.externalUrl);
 ---
 
 <section class="space-y-6">
@@ -26,7 +29,7 @@ const embedUrl = getEmbedUrl(data.embedUrl);
   }
 
   {
-    (data.type === 'embed' || data.type === 'video') && embedUrl && (
+    embedUrl && (
       <div class="aspect-video overflow-hidden rounded-lg border border-[var(--line)] bg-black">
         <iframe
           class="h-full w-full"

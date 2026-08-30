@@ -42,7 +42,13 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         class="mt-0 block rounded-lg border border-dashed border-[var(--line)] bg-[color-mix(in_srgb,var(--bg)_54%,transparent)] p-6 transition"
         data-dropzone
       >
-        <span class="block text-lg font-semibold">Choose or drop images</span>
+        <span class="block text-lg font-semibold"
+          >Choose or drop a cover image</span
+        >
+        <span class="mt-2 block text-sm leading-6 text-[var(--muted)]">
+          Optional when publishing a YouTube video or embed. For image-based
+          work, a cover image is still required.
+        </span>
         <span class="mt-2 block text-sm leading-6 text-[var(--muted)]">
           JPEG, PNG, WebP, GIF, and AVIF depend on browser decode support. HEIC
           may need to be exported from the phone first.
@@ -169,6 +175,10 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
               placeholder="https://www.youtube.com/watch?v=..."
               data-youtube-url
             />
+            <span class="text-xs leading-5 text-[var(--muted)]">
+              A valid YouTube URL can be uploaded without a cover image. The
+              build will use YouTube's thumbnail and render the video embed.
+            </span>
           </label>
         </div>
       </section>
@@ -243,7 +253,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
             />
             <span class="text-xs leading-5 text-[var(--muted)]">
               Auto-switches between incoming/designs/images and
-              incoming/contents/images when the destination page changes.
+              incoming/contents/images when the destination page changes. A
+              YouTube-only video or embed is routed to its manifest folder.
             </span>
           </label>
           <label class="grid gap-2 text-sm">

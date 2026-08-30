@@ -58,7 +58,8 @@ pnpm preview
 
 The low-effort path is:
 
-1. Download an image from ChatGPT, Gemini, or another generator.
+1. Download an image from ChatGPT, Gemini, or another generator when the work
+   needs a local cover image. YouTube-only records can skip this step.
 2. Open `/upload/`.
 3. Choose the destination page:
    - `Designs` for icons, images, UX, identity, prototypes, and collections.
@@ -139,6 +140,10 @@ Example:
 The pipeline converts normal YouTube watch, share, shorts, or embed URLs into a
 safe iframe URL and uses `https://img.youtube.com/vi/{id}/hqdefault.jpg` as the
 thumbnail when no local thumbnail is provided.
+
+The `/upload/` form supports both paths: include a cover image to upload an
+image and sidecar together, or leave the image blank to upload a video/embed
+manifest directly.
 
 ## Manual Content
 
