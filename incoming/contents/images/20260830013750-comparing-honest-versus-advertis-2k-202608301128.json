@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "page": "content",
+  "category": "video",
+  "title": "What If AI Told You the Truth About Your Grocery Labels? | TruthLens AI (AI Generated Video)",
+  "description": "",
+  "type": "embed",
+  "aiTool": "Gemini",
+  "tools": [
+    "Gemini"
+  ],
+  "tags": [
+    "ai-generated",
+    "video"
+  ],
+  "youtubeUrl": "https://youtu.be/oRLW7YLjV48",
+  "sourceName": "Comparing_honest_versus_advertis…_2K_202608301128.jpeg",
+  "outputName": "20260830013750-comparing-honest-versus-advertis-2k-202608301128.webp",
+  "uploadedAt": "2026-08-30T01:38:47.201Z",
+  "width": 1800,
+  "height": 1005
+}
