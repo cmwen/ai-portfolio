@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "page": "content",
+  "category": "video",
+  "title": "Collaborative Autonomy: Redefining Human-AI Interaction in Autonomous Vehicles",
+  "description": "",
+  "type": "video",
+  "aiTool": "Gemini",
+  "tools": [
+    "Gemini"
+  ],
+  "tags": [
+    "ai-generated",
+    "video"
+  ],
+  "youtubeUrl": "https://www.youtube.com/watch?v=FiQaZUWILuY",
+  "uploadedAt": "2026-08-31T22:19:14.719Z"
+}
