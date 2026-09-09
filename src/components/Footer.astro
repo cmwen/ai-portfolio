@@ -9,11 +9,15 @@ import { site, withBase } from '../lib/site';
     <div>
       <p class="font-medium text-[var(--ink)]">{site.title}</p>
       <p class="mt-2 max-w-2xl">
-        A side portfolio for AI-built media and experiments. Main writing,
-        search, tags, and longer notes live on Min Wen's blog.
+        A focused portfolio for AI-built design, media, and interactive 3D work.
+        Longer notes live on Min Wen's blog.
       </p>
     </div>
     <div class="flex flex-wrap gap-4 md:justify-end">
+      <a
+        class="focus-ring rounded hover:text-[var(--ink)]"
+        href={withBase('/models/')}>3D Models</a
+      >
       <a
         class="focus-ring rounded hover:text-[var(--ink)]"
         href={withBase('/works/')}>Gallery</a

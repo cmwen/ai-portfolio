@@ -16,7 +16,8 @@ export async function getAllWorks() {
 
 export async function getFeaturedWorks() {
   const works = await getAllWorks();
-  return works.filter((work) => work.data.featured).slice(0, 6);
+  const featured = works.filter((work) => work.data.featured);
+  return (featured.length > 0 ? featured : works).slice(0, 6);
 }
 
 export async function getWorksByType(types: WorkType[]) {
@@ -47,6 +48,7 @@ export function labelForType(type: WorkType) {
     collection: 'Collection',
     embed: 'Embed',
     image: 'Image',
+    model: '3D Model',
     video: 'Video',
   };
 
@@ -57,6 +59,7 @@ export function labelForPage(page: WorkPage) {
   const labels: Record<WorkPage, string> = {
     content: 'Content',
     design: 'Design',
+    model: '3D Model',
   };
 
   return labels[page];

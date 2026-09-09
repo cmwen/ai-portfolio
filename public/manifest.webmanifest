@@ -1,7 +1,7 @@
 {
   "name": "AI Portfolio Upload",
   "short_name": "AI Upload",
-  "description": "Upload cleaned image assets into the AI Portfolio publishing pipeline.",
+  "description": "Upload images and 3D models into the AI Portfolio publishing pipeline.",
   "id": "/ai-portfolio/",
   "start_url": "/ai-portfolio/upload/",
   "scope": "/ai-portfolio/",
@@ -10,9 +10,9 @@
   "theme_color": "#0d9488",
   "icons": [
     {
-      "src": "/ai-portfolio/media/thumbnails/latent-harbor.webp",
-      "sizes": "512x512",
-      "type": "image/webp",
+      "src": "/ai-portfolio/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
       "purpose": "any"
     }
   ],
@@ -40,7 +40,9 @@
             ".gif",
             ".avif",
             ".heic",
-            ".heif"
+            ".heif",
+            "model/gltf-binary",
+            ".glb"
           ]
         }
       ]

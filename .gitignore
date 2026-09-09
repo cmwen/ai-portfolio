@@ -3,3 +3,7 @@ dist
 .astro
 .env
 .DS_Store
+public/media/images/auto/
+public/media/thumbnails/auto/
+public/media/models/auto/
+src/content/works/generated/*.mdx

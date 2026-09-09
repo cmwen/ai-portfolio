@@ -4,7 +4,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
 <BaseLayout
   title="Upload"
-  description="Private browser-side upload workflow for the AI Portfolio pipeline."
+  description="Private browser-side upload workflow for images and 3D models."
 >
   <section class="mx-auto max-w-7xl px-5 py-10 lg:px-8">
     <div class="max-w-3xl">
@@ -14,11 +14,11 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         Private upload
       </p>
       <h1 class="mt-4 text-4xl font-semibold tracking-tight sm:text-5xl">
-        Clean media, add metadata, route it to the right page.
+        Add a file, describe it, and send it to the right collection.
       </h1>
       <p class="mt-5 max-w-2xl text-base leading-7 text-[var(--muted)]">
-        The browser strips metadata, converts the file to WebP with a WASM
-        encoder, and uploads the result with a JSON sidecar for the build
+        Images are cleaned and converted to WebP in your browser. GLB models
+        stay untouched. Each upload gets a JSON sidecar for the publishing
         pipeline.
       </p>
     </div>
@@ -35,23 +35,27 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         class="hidden rounded-lg border border-[var(--accent)] bg-[color-mix(in_srgb,var(--accent)_10%,transparent)] px-4 py-3 text-sm text-[var(--accent-ink)]"
         data-shared-notice
       >
-        Shared image received from the operating system.
+        Shared file received from the operating system.
       </div>
 
       <label
         class="mt-0 block rounded-lg border border-dashed border-[var(--line)] bg-[color-mix(in_srgb,var(--bg)_54%,transparent)] p-6 transition"
         data-dropzone
       >
-        <span class="block text-lg font-semibold"
-          >Choose or drop a cover image</span
+        <span class="block text-lg font-semibold" data-file-heading
+          >Choose or drop an image</span
         >
         <span class="mt-2 block text-sm leading-6 text-[var(--muted)]">
-          Optional when publishing a YouTube video or embed. For image-based
-          work, a cover image is still required.
+          <span data-file-guidance
+            >Optional when publishing a YouTube video or embed. For image-based
+            work, an image is required.</span
+          >
         </span>
         <span class="mt-2 block text-sm leading-6 text-[var(--muted)]">
-          JPEG, PNG, WebP, GIF, and AVIF depend on browser decode support. HEIC
-          may need to be exported from the phone first.
+          <span data-format-guidance
+            >JPEG, PNG, WebP, GIF, and AVIF depend on browser decode support.
+            HEIC may need to be exported from the phone first.</span
+          >
         </span>
         <input
           class="mt-5 block w-full cursor-pointer rounded border border-[var(--line)] bg-[var(--surface)] p-3 text-sm"
@@ -68,7 +72,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       >
         <div>
           <p class="text-sm font-semibold">Destination page</p>
-          <div class="mt-3 grid gap-3 sm:grid-cols-2">
+          <div class="mt-3 grid gap-3 sm:grid-cols-3">
             <label
               class="focus-within:ring-2 focus-within:ring-[var(--accent)] rounded-lg border border-[var(--line)] bg-[var(--bg)] p-4"
             >
@@ -83,6 +87,21 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
               <span class="block text-sm font-semibold">Designs</span>
               <span class="mt-1 block text-sm leading-6 text-[var(--muted)]">
                 Icon, image, UX, identity, collection.
+              </span>
+            </label>
+            <label
+              class="focus-within:ring-2 focus-within:ring-[var(--accent)] rounded-lg border border-[var(--line)] bg-[var(--bg)] p-4"
+            >
+              <input
+                class="sr-only"
+                type="radio"
+                name="page"
+                value="model"
+                data-page
+              />
+              <span class="block text-sm font-semibold">3D Models</span>
+              <span class="mt-1 block text-sm leading-6 text-[var(--muted)]">
+                Interactive GLB files for the 3D gallery.
               </span>
             </label>
             <label
@@ -166,7 +185,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
               placeholder="Short gallery description. The pipeline will use a plain fallback if blank."
               data-description></textarea>
           </label>
-          <label class="grid gap-2 text-sm sm:col-span-2">
+          <label class="grid gap-2 text-sm sm:col-span-2" data-youtube-wrap>
             <span class="font-medium">YouTube URL</span>
             <input
               class="focus-ring rounded border border-[var(--line)] bg-[var(--bg)] px-3 py-2"
@@ -189,7 +208,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           type="button"
           data-prepare
         >
-          Prepare WebP
+          Prepare file
         </button>
         <button
           class="focus-ring rounded-full bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-45"
@@ -203,6 +222,8 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
       <p
         class="mt-5 rounded-lg border border-[var(--line)] px-4 py-3 text-sm text-[var(--muted)] data-[tone=error]:border-red-400 data-[tone=error]:text-red-700 data-[tone=ok]:border-[var(--accent)] data-[tone=ok]:text-[var(--accent-ink)]"
         data-status
+        role="status"
+        aria-live="polite"
       >
         Ready.
       </p>
@@ -252,9 +273,9 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
               data-directory
             />
             <span class="text-xs leading-5 text-[var(--muted)]">
-              Auto-switches between incoming/designs/images and
-              incoming/contents/images when the destination page changes. A
-              YouTube-only video or embed is routed to its manifest folder.
+              Auto-switches between the image and model inboxes when the
+              destination changes. A YouTube-only video or embed is routed to
+              its manifest folder.
             </span>
           </label>
           <label class="grid gap-2 text-sm">

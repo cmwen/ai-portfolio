@@ -8,7 +8,7 @@ type UploadSettings = {
   token: string;
 };
 
-type UploadPage = 'design' | 'content';
+type UploadPage = 'design' | 'content' | 'model';
 
 type ContentMetadata = {
   page: UploadPage;
@@ -21,6 +21,7 @@ type ContentMetadata = {
 };
 
 type PreparedImage = {
+  kind: 'image';
   sourceName: string;
   outputName: string;
   blob: Blob;
@@ -30,6 +31,18 @@ type PreparedImage = {
   outputBytes: number;
   previewUrl: string;
 };
+
+type PreparedModel = {
+  kind: 'model';
+  sourceName: string;
+  outputName: string;
+  blob: Blob;
+  originalBytes: number;
+  outputBytes: number;
+  previewUrl: string;
+};
+
+type PreparedAsset = PreparedImage | PreparedModel;
 
 type SharePayload = {
   title?: string;
@@ -72,6 +85,7 @@ const defaults = {
 const directoryByPage: Record<UploadPage, string> = {
   content: 'incoming/contents/images',
   design: 'incoming/designs/images',
+  model: 'incoming/models',
 };
 
 const manifestDirectoryByCategory: Record<string, string> = {
@@ -90,10 +104,12 @@ const categoriesByPage: Record<UploadPage, string[]> = {
     'prototype',
     'other',
   ],
+  model: ['3d-model'],
 };
 
 const maxWidth = 1800;
 const webpQuality = 84;
+let modelViewerReady: Promise<unknown> | undefined;
 
 const form = document.querySelector<HTMLFormElement>('[data-upload-form]');
 const fileInput = document.querySelector<HTMLInputElement>('[data-file-input]');
@@ -122,6 +138,14 @@ const descriptionInput =
 const tagsInput = document.querySelector<HTMLInputElement>('[data-tags]');
 const youtubeUrlInput =
   document.querySelector<HTMLInputElement>('[data-youtube-url]');
+const youtubeWrap = document.querySelector<HTMLElement>('[data-youtube-wrap]');
+const fileHeading = document.querySelector<HTMLElement>('[data-file-heading]');
+const fileGuidance = document.querySelector<HTMLElement>(
+  '[data-file-guidance]',
+);
+const formatGuidance = document.querySelector<HTMLElement>(
+  '[data-format-guidance]',
+);
 const saveSettingsButton = document.querySelector<HTMLButtonElement>(
   '[data-save-settings]',
 );
@@ -139,7 +163,7 @@ const installState = document.querySelector<HTMLElement>(
   '[data-install-state]',
 );
 
-const preparedImages: PreparedImage[] = [];
+const preparedAssets: PreparedAsset[] = [];
 
 hydrateSettings();
 registerUiEvents();
@@ -212,12 +236,13 @@ function registerUiEvents() {
       updateCategoryOptions(pageInput.value as UploadPage);
       updateSelectedPageCards();
       syncDirectoryForPage(pageInput.value as UploadPage);
+      updateFileMode(pageInput.value as UploadPage);
     });
   }
 
   aiToolInput?.addEventListener('change', updateManualToolVisibility);
   youtubeUrlInput?.addEventListener('input', () => {
-    if (preparedImages.length === 0) updateUploadGuidance();
+    if (preparedAssets.length === 0) updateUploadGuidance();
   });
 }
 
@@ -226,6 +251,7 @@ function hydrateSettings() {
   setPage(page);
   updateCategoryOptions(page);
   updateSelectedPageCards();
+  updateFileMode(page);
 
   if (categoryInput) {
     const storedCategory =
@@ -264,19 +290,38 @@ function hydrateSettings() {
 }
 
 async function prepareFiles(files: File[]) {
-  const imageFiles = files.filter(isImageFile);
+  const page = readSelectedPage();
+  if (
+    page === 'model' &&
+    files.some(
+      (file) => /\.glb$/i.test(file.name) && file.size > 95 * 1024 * 1024,
+    )
+  ) {
+    clearPreparedAssets();
+    renderPreparedAssets();
+    setStatus(
+      'This GLB is larger than 95 MB. Optimize it before uploading through GitHub.',
+      'error',
+    );
+    return;
+  }
+  const acceptedFiles = files.filter(
+    page === 'model' ? isModelFile : isImageFile,
+  );
 
-  if (imageFiles.length === 0) {
-    clearPreparedImages();
-    if (readContentMetadata().youtubeUrl) {
-      renderPreparedImages();
+  if (acceptedFiles.length === 0) {
+    clearPreparedAssets();
+    if (page !== 'model' && readContentMetadata().youtubeUrl) {
+      renderPreparedAssets();
       setStatus(
         'No cover image selected. Upload will create a YouTube video manifest.',
         'ok',
       );
     } else {
       setStatus(
-        'Choose or share a cover image, or add a valid YouTube URL.',
+        page === 'model'
+          ? 'Choose a .glb file to add a 3D model.'
+          : 'Choose or share an image, or add a valid YouTube URL.',
         'error',
       );
     }
@@ -284,20 +329,31 @@ async function prepareFiles(files: File[]) {
   }
 
   setBusy(true);
-  setStatus('Cleaning metadata and encoding WebP with WASM...', 'loading');
+  setStatus(
+    page === 'model'
+      ? 'Preparing GLB model...'
+      : 'Cleaning metadata and encoding WebP with WASM...',
+    'loading',
+  );
 
-  clearPreparedImages();
+  clearPreparedAssets();
 
   try {
-    for (const file of imageFiles) {
-      preparedImages.push(await transformImage(file));
-      renderPreparedImages();
+    if (page === 'model') await loadModelViewer();
+
+    for (const file of acceptedFiles) {
+      preparedAssets.push(
+        page === 'model' ? prepareModel(file) : await transformImage(file),
+      );
+      renderPreparedAssets();
     }
 
     setStatus(
-      `Prepared ${preparedImages.length} cleaned WebP ${
-        preparedImages.length === 1 ? 'image' : 'images'
-      }.`,
+      page === 'model'
+        ? `Prepared ${preparedAssets.length} GLB ${preparedAssets.length === 1 ? 'model' : 'models'}.`
+        : `Prepared ${preparedAssets.length} cleaned WebP ${
+            preparedAssets.length === 1 ? 'image' : 'images'
+          }.`,
       'ok',
     );
   } catch (error) {
@@ -305,6 +361,11 @@ async function prepareFiles(files: File[]) {
   } finally {
     setBusy(false);
   }
+}
+
+function loadModelViewer() {
+  modelViewerReady ??= import('@google/model-viewer');
+  return modelViewerReady;
 }
 
 async function transformImage(file: File): Promise<PreparedImage> {
@@ -324,6 +385,7 @@ async function transformImage(file: File): Promise<PreparedImage> {
   const outputName = `${timestampSlug()}-${slugify(file.name)}.webp`;
 
   return {
+    kind: 'image',
     sourceName: file.name,
     outputName,
     blob,
@@ -332,6 +394,20 @@ async function transformImage(file: File): Promise<PreparedImage> {
     originalBytes: file.size,
     outputBytes: blob.size,
     previewUrl: URL.createObjectURL(blob),
+  };
+}
+
+function prepareModel(file: File): PreparedModel {
+  const outputName = `${timestampSlug()}-${slugify(file.name)}.glb`;
+
+  return {
+    kind: 'model',
+    sourceName: file.name,
+    outputName,
+    blob: file,
+    originalBytes: file.size,
+    outputBytes: file.size,
+    previewUrl: URL.createObjectURL(file),
   };
 }
 
@@ -384,14 +460,16 @@ async function uploadPreparedImages() {
   const metadata = readContentMetadata();
   const rawYouTubeUrl = cleanInput(youtubeUrlInput?.value);
 
-  if (rawYouTubeUrl && !metadata.youtubeUrl) {
+  if (metadata.page !== 'model' && rawYouTubeUrl && !metadata.youtubeUrl) {
     setStatus('Enter a valid YouTube URL.', 'error');
     return;
   }
 
-  if (preparedImages.length === 0 && !metadata.youtubeUrl) {
+  if (preparedAssets.length === 0 && !metadata.youtubeUrl) {
     setStatus(
-      'Choose or share a cover image, or add a valid YouTube URL.',
+      metadata.page === 'model'
+        ? 'Choose a .glb file to add a 3D model.'
+        : 'Choose or share an image, or add a valid YouTube URL.',
       'error',
     );
     return;
@@ -424,22 +502,22 @@ async function uploadPreparedImages() {
 
     const createdUrls: string[] = [];
 
-    if (preparedImages.length === 0) {
+    if (preparedAssets.length === 0) {
       setStatus('Uploading YouTube video metadata...', 'loading');
       const response = await putManifestFile(settings, metadata);
       createdUrls.push(response.content?.html_url ?? response.commit?.html_url);
     } else {
-      for (const image of preparedImages) {
-        setStatus(`Uploading ${image.outputName}...`, 'loading');
-        const response = await putFile(settings, image);
+      for (const asset of preparedAssets) {
+        setStatus(`Uploading ${asset.outputName}...`, 'loading');
+        const response = await putFile(settings, asset);
         createdUrls.push(
           response.content?.html_url ?? response.commit?.html_url,
         );
 
-        setStatus(`Uploading metadata for ${image.outputName}...`, 'loading');
+        setStatus(`Uploading metadata for ${asset.outputName}...`, 'loading');
         const metadataResponse = await putMetadataFile(
           settings,
-          image,
+          asset,
           metadata,
         );
         createdUrls.push(
@@ -451,11 +529,17 @@ async function uploadPreparedImages() {
 
     renderLinks(createdUrls.filter(Boolean));
     setStatus(
-      preparedImages.length === 0
+      preparedAssets.length === 0
         ? 'Uploaded a YouTube video manifest. GitHub Actions will publish the video next.'
-        : `Uploaded ${preparedImages.length} image${
-            preparedImages.length === 1 ? '' : 's'
-          }. GitHub Actions will publish the processed gallery next.`,
+        : `Uploaded ${preparedAssets.length} ${
+            metadata.page === 'model'
+              ? preparedAssets.length === 1
+                ? '3D model'
+                : '3D models'
+              : preparedAssets.length === 1
+                ? 'image'
+                : 'images'
+          }. GitHub Actions will publish the ${metadata.page === 'model' ? '3D gallery' : 'processed gallery'} next.`,
       'ok',
     );
   } catch (error) {
@@ -465,25 +549,25 @@ async function uploadPreparedImages() {
   }
 }
 
-async function putFile(settings: UploadSettings, image: PreparedImage) {
-  const path = `${trimSlashes(settings.directory)}/${image.outputName}`;
-  const content = await blobToBase64(image.blob);
+async function putFile(settings: UploadSettings, asset: PreparedAsset) {
+  const path = `${trimSlashes(settings.directory)}/${asset.outputName}`;
+  const content = await blobToBase64(asset.blob);
 
   return putBase64File({
     settings,
     path,
     content,
-    message: `Add uploaded image ${image.outputName}`,
+    message: `Add uploaded ${asset.kind} ${asset.outputName}`,
   });
 }
 
 async function putMetadataFile(
   settings: UploadSettings,
-  image: PreparedImage,
+  asset: PreparedAsset,
   metadata: ContentMetadata,
 ) {
   const path = `${trimSlashes(settings.directory)}/${metadataFileName(
-    image.outputName,
+    asset.outputName,
   )}`;
   const payload = {
     version: 1,
@@ -491,22 +575,26 @@ async function putMetadataFile(
     category: metadata.category,
     title: metadata.title,
     description: metadata.description,
-    type: metadata.youtubeUrl
-      ? metadata.category === 'video'
-        ? 'video'
-        : 'embed'
-      : 'image',
+    type:
+      asset.kind === 'model'
+        ? 'model'
+        : metadata.youtubeUrl
+          ? metadata.category === 'video'
+            ? 'video'
+            : 'embed'
+          : 'image',
     aiTool: metadata.aiTool,
     tools: metadata.aiTool ? [metadata.aiTool] : [],
     tags: Array.from(
       new Set(['ai-generated', metadata.category, ...metadata.tags]),
     ),
     youtubeUrl: metadata.youtubeUrl,
-    sourceName: image.sourceName,
-    outputName: image.outputName,
+    sourceName: asset.sourceName,
+    outputName: asset.outputName,
     uploadedAt: new Date().toISOString(),
-    width: image.width,
-    height: image.height,
+    ...(asset.kind === 'image'
+      ? { width: asset.width, height: asset.height }
+      : { modelFile: asset.outputName }),
   };
   const content = textToBase64(`${JSON.stringify(payload, null, 2)}\n`);
 
@@ -514,7 +602,7 @@ async function putMetadataFile(
     settings,
     path,
     content,
-    message: `Add upload metadata for ${image.outputName}`,
+    message: `Add upload metadata for ${asset.outputName}`,
   });
 }
 
@@ -646,7 +734,10 @@ function readContentMetadata(): ContentMetadata {
     description: cleanInput(descriptionInput?.value),
     aiTool,
     tags: parseTags(tagsInput?.value ?? ''),
-    youtubeUrl: normalizeYouTubeUrl(cleanInput(youtubeUrlInput?.value)),
+    youtubeUrl:
+      page === 'model'
+        ? ''
+        : normalizeYouTubeUrl(cleanInput(youtubeUrlInput?.value)),
   };
 }
 
@@ -659,11 +750,18 @@ async function loadSharedFiles() {
     const files = payload?.files ?? [];
 
     if (files.length > 0) {
+      if (files.some(isModelFile)) {
+        setPage('model');
+        updateCategoryOptions('model');
+        updateSelectedPageCards();
+        syncDirectoryForPage('model');
+        updateFileMode('model');
+      }
       sharedNotice?.classList.remove('hidden');
       await prepareFiles(files);
     } else {
       setStatus(
-        'The share target opened, but no image file was received.',
+        'The share target opened, but no compatible file was received.',
         'error',
       );
     }
@@ -697,36 +795,40 @@ function openShareDb(): Promise<IDBDatabase> {
   });
 }
 
-function renderPreparedImages() {
+function renderPreparedAssets() {
   if (!listEl) return;
 
-  listEl.innerHTML = preparedImages
+  listEl.innerHTML = preparedAssets
     .map(
-      (image) => `
+      (asset) => `
         <article class="grid gap-4 rounded-lg border border-[var(--line)] bg-[var(--surface)] p-4 sm:grid-cols-[9rem_1fr]">
-          <img class="aspect-[4/3] h-full w-full rounded-md object-cover" src="${image.previewUrl}" alt="">
+          ${
+            asset.kind === 'model'
+              ? `<model-viewer class="aspect-[4/3] h-full w-full rounded-md bg-[var(--bg)]" src="${escapeAttribute(asset.previewUrl)}" alt="Preview of ${escapeAttribute(asset.sourceName)}" camera-controls auto-rotate shadow-intensity="1"></model-viewer>`
+              : `<img class="aspect-[4/3] h-full w-full rounded-md object-cover" src="${escapeAttribute(asset.previewUrl)}" alt="">`
+          }
           <div class="min-w-0">
-            <h3 class="truncate text-base font-semibold">${escapeHtml(image.outputName)}</h3>
-            <p class="mt-2 text-sm text-[var(--muted)]">${escapeHtml(image.sourceName)}</p>
+            <h3 class="truncate text-base font-semibold">${escapeHtml(asset.outputName)}</h3>
+            <p class="mt-2 text-sm text-[var(--muted)]">${escapeHtml(asset.sourceName)}</p>
             <p class="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--accent-ink)]">${escapeHtml(
               previewMetadataLabel(),
             )}</p>
             <dl class="mt-4 grid grid-cols-2 gap-3 text-sm">
               <div>
                 <dt class="text-[var(--muted)]">Output</dt>
-                <dd class="font-medium">${formatBytes(image.outputBytes)}</dd>
+                <dd class="font-medium">${formatBytes(asset.outputBytes)}</dd>
               </div>
               <div>
                 <dt class="text-[var(--muted)]">Original</dt>
-                <dd class="font-medium">${formatBytes(image.originalBytes)}</dd>
+                <dd class="font-medium">${formatBytes(asset.originalBytes)}</dd>
               </div>
               <div>
-                <dt class="text-[var(--muted)]">Size</dt>
-                <dd class="font-medium">${image.width} x ${image.height}</dd>
+                <dt class="text-[var(--muted)]">${asset.kind === 'model' ? 'Asset' : 'Size'}</dt>
+                <dd class="font-medium">${asset.kind === 'model' ? 'Interactive 3D' : `${asset.width} x ${asset.height}`}</dd>
               </div>
               <div>
                 <dt class="text-[var(--muted)]">Format</dt>
-                <dd class="font-medium">WebP, EXIF stripped</dd>
+                <dd class="font-medium">${asset.kind === 'model' ? 'GLB, unchanged' : 'WebP, EXIF stripped'}</dd>
               </div>
             </dl>
           </div>
@@ -736,9 +838,9 @@ function renderPreparedImages() {
     .join('');
 }
 
-function clearPreparedImages() {
-  for (const image of preparedImages.splice(0)) {
-    URL.revokeObjectURL(image.previewUrl);
+function clearPreparedAssets() {
+  for (const asset of preparedAssets.splice(0)) {
+    URL.revokeObjectURL(asset.previewUrl);
   }
 }
 
@@ -773,12 +875,17 @@ function setPage(page: UploadPage) {
 
 function readStoredPage(): UploadPage {
   const stored = localStorage.getItem(storageKeys.page);
-  return stored === 'content' || stored === 'design' ? stored : defaults.page;
+  return stored === 'content' || stored === 'design' || stored === 'model'
+    ? stored
+    : defaults.page;
 }
 
 function readSelectedPage(): UploadPage {
   const checked = pageInputs.find((input) => input.checked);
-  return checked?.value === 'content' ? 'content' : 'design';
+  if (checked?.value === 'content' || checked?.value === 'model') {
+    return checked.value;
+  }
+  return 'design';
 }
 
 function updateCategoryOptions(page: UploadPage) {
@@ -826,12 +933,42 @@ function updateUploadGuidance() {
   const metadata = readContentMetadata();
   if (metadata.youtubeUrl) {
     setStatus(
-      preparedImages.length === 0
+      preparedAssets.length === 0
         ? 'YouTube URL ready. A cover image is optional.'
         : 'YouTube URL ready. The cover image will be uploaded with the embed.',
       'ok',
     );
   }
+}
+
+function updateFileMode(page: UploadPage) {
+  const isModel = page === 'model';
+  if (fileInput) {
+    fileInput.accept = isModel
+      ? '.glb,model/gltf-binary'
+      : 'image/*,.heic,.heif';
+    fileInput.multiple = !isModel;
+    fileInput.value = '';
+  }
+  if (fileHeading) {
+    fileHeading.textContent = isModel
+      ? 'Choose or drop a GLB model'
+      : 'Choose or drop an image';
+  }
+  if (fileGuidance) {
+    fileGuidance.textContent = isModel
+      ? 'Upload a self-contained .glb file. It will be published without conversion.'
+      : 'Optional when publishing a YouTube video or embed. For image-based work, an image is required.';
+  }
+  if (formatGuidance) {
+    formatGuidance.textContent = isModel
+      ? 'For reliable GitHub uploads, keep the model below 95 MB and embed its textures in the GLB.'
+      : 'JPEG, PNG, WebP, GIF, and AVIF depend on browser decode support. HEIC may need to be exported first.';
+  }
+  youtubeWrap?.classList.toggle('hidden', isModel);
+  clearPreparedAssets();
+  renderPreparedAssets();
+  setStatus(isModel ? 'Ready for a GLB model.' : 'Ready.', 'ok');
 }
 
 function updateManualToolVisibility() {
@@ -965,6 +1102,13 @@ function isImageFile(file: File) {
   return (
     file.type.startsWith('image/') ||
     /\.(avif|gif|heic|heif|jpe?g|png|webp)$/i.test(file.name)
+  );
+}
+
+function isModelFile(file: File) {
+  return (
+    file.size <= 95 * 1024 * 1024 &&
+    (file.type === 'model/gltf-binary' || /\.glb$/i.test(file.name))
   );
 }
 

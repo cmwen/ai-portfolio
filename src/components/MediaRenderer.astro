@@ -1,6 +1,7 @@
 ---
 import { getEmbedUrl, type Work } from '../lib/works';
 import { withBase } from '../lib/site';
+import ModelViewer from './ModelViewer.astro';
 
 interface Props {
   work: Work;
@@ -17,7 +18,26 @@ const embedUrl =
 
 <section class="space-y-6">
   {
-    data.heroImage && (
+    data.type === 'model' && data.modelUrl && (
+      <div class="overflow-hidden rounded-lg border border-[var(--line)] bg-[var(--surface)]">
+        <ModelViewer
+          src={data.modelUrl}
+          alt={
+            data.heroImageAlt ||
+            data.thumbnailAlt ||
+            `Interactive 3D model: ${data.title}`
+          }
+          poster={data.heroImage || data.thumbnail}
+        />
+        <p class="border-t border-[var(--line)] px-4 py-3 text-sm text-[var(--muted)]">
+          Drag to rotate · Scroll or pinch to zoom
+        </p>
+      </div>
+    )
+  }
+
+  {
+    data.type !== 'model' && data.heroImage && (
       <img
         class="w-full rounded-lg border border-[var(--line)] object-cover"
         src={withBase(data.heroImage)}

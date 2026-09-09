@@ -5,16 +5,17 @@
   "type": "module",
   "scripts": {
     "sync:images": "node scripts/sync-images.mjs",
-    "dev": "pnpm sync:images && astro dev",
-    "build": "pnpm sync:images && astro build",
+    "dev": "node scripts/sync-images.mjs && astro dev",
+    "build": "node scripts/sync-images.mjs && astro build",
     "preview": "astro preview",
-    "check": "pnpm sync:images && astro check",
+    "check": "node scripts/sync-images.mjs && astro check",
     "format": "prettier --check .",
     "format:write": "prettier --write ."
   },
   "dependencies": {
     "@astrojs/mdx": "^6.0.3",
     "@astrojs/sitemap": "^3.7.3",
+    "@google/model-viewer": "^4.3.1",
     "@jsquash/webp": "^1.5.0",
     "@tailwindcss/vite": "^4.3.1",
     "astro": "^6.4.8",

@@ -14,16 +14,15 @@ const title = Astro.props.title
   ? `${Astro.props.title} | ${site.title}`
   : site.title;
 const description = Astro.props.description ?? site.description;
-const imagePath = Astro.props.image
-  ? withBase(Astro.props.image)
-  : withBase('/media/thumbnails/latent-harbor.webp');
-const image = new URL(imagePath, 'https://cmwen.github.io').toString();
+const image = Astro.props.image
+  ? new URL(withBase(Astro.props.image), 'https://cmwen.github.io').toString()
+  : '';
 const canonical = new URL(
   Astro.url.pathname,
   'https://cmwen.github.io',
 ).toString();
 const manifest = withBase('/manifest.webmanifest');
-const icon = withBase('/media/thumbnails/latent-harbor.webp');
+const icon = withBase('/icon.svg');
 const serviceWorker = withBase('/sw.js');
 const serviceWorkerScope = import.meta.env.BASE_URL;
 ---
@@ -40,12 +39,15 @@ const serviceWorkerScope = import.meta.env.BASE_URL;
     <meta property="og:type" content="website" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    <meta property="og:image" content={image} />
+    {image && <meta property="og:image" content={image} />}
     <meta property="og:url" content={canonical} />
-    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:card"
+      content={image ? 'summary_large_image' : 'summary'}
+    />
     <meta name="theme-color" content="#0d9488" />
     <link rel="manifest" href={manifest} />
-    <link rel="icon" type="image/webp" href={icon} />
+    <link rel="icon" type="image/svg+xml" href={icon} />
     <link rel="apple-touch-icon" href={icon} />
   </head>
   <body>

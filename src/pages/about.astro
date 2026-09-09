@@ -18,9 +18,9 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     <div class="prose-lab lg:col-span-2">
       <h2>Process</h2>
       <p>
-        The default workflow is intentionally small: copy generated images into
-        <code>incoming/images</code>, then run the site. Automation creates the
-        optimized media, thumbnail, and landing-page MDX entry.
+        The workflow is intentionally small: add generated images or GLB models
+        through the private upload page, then run the site. Automation prepares
+        the public asset and its landing-page MDX entry.
       </p>
       <p>
         When something deserves more care, the generated MDX can be edited into
@@ -51,6 +51,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       <ul class="mt-4 space-y-3 text-sm leading-6 text-[var(--muted)]">
         <li>Main blog remains the hub.</li>
         <li>Images can start with almost no manual metadata.</li>
+        <li>GLB models remain interactive and self-contained.</li>
         <li>Generated records are editable when needed.</li>
         <li>Small static output stays easy to host on GitHub Pages.</li>
       </ul>

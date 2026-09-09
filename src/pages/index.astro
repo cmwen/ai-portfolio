@@ -4,8 +4,10 @@ import WorkGrid from '../components/WorkGrid.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { withBase } from '../lib/site';
 import { getFeaturedWorks } from '../lib/works';
+import ModelViewer from '../components/ModelViewer.astro';
 
 const featuredWorks = await getFeaturedWorks();
+const leadWork = featuredWorks[0];
 ---
 
 <BaseLayout>
@@ -19,12 +21,11 @@ const featuredWorks = await getFeaturedWorks();
         Min Wen's AI collection
       </p>
       <h1 class="mt-5 text-5xl font-semibold leading-none md:text-7xl">
-        AI designs and AI content, kept in two clean shelves.
+        AI-made work, collected without the clutter.
       </h1>
       <p class="mt-6 max-w-2xl text-lg leading-8 text-[var(--muted)]">
-        Designs are visual/UI artifacts like icons, image studies, UX concepts,
-        and systems. Contents are media outputs like posters, comics, video,
-        audio, and embeds.
+        A growing collection of visual design, media, experiments, and
+        interactive 3D models—made with AI and kept easy to explore.
       </p>
       <div class="mt-8 flex flex-wrap gap-3">
         <a
@@ -39,17 +40,45 @@ const featuredWorks = await getFeaturedWorks();
         >
           View contents
         </a>
+        <a
+          class="focus-ring rounded-full border border-[var(--line)] bg-[var(--surface)] px-5 py-3 text-sm font-semibold"
+          href={withBase('/models/')}
+        >
+          Explore 3D
+        </a>
       </div>
     </div>
-    <div class="relative">
-      <img
-        class="aspect-[4/5] w-full rounded-lg border border-[var(--line)] object-cover shadow-2xl"
-        src={withBase('/media/images/latent-harbor.webp')}
-        alt="Placeholder AI portfolio hero image showing an atmospheric creative study."
-        loading="eager"
-        decoding="async"
-      />
-    </div>
+    {
+      leadWork && (
+        <a
+          class="focus-ring group relative block overflow-hidden rounded-lg border border-[var(--line)] bg-[var(--surface)] shadow-2xl"
+          href={withBase(`/works/${leadWork.data.slug}/`)}
+        >
+          {leadWork.data.type === 'model' && leadWork.data.modelUrl ? (
+            <ModelViewer
+              src={leadWork.data.modelUrl}
+              alt={
+                leadWork.data.thumbnailAlt ||
+                `3D preview of ${leadWork.data.title}`
+              }
+              poster={leadWork.data.thumbnail}
+              compact
+            />
+          ) : leadWork.data.heroImage || leadWork.data.thumbnail ? (
+            <img
+              class="aspect-[4/5] w-full object-cover transition duration-700 group-hover:scale-[1.02]"
+              src={withBase(leadWork.data.heroImage || leadWork.data.thumbnail)}
+              alt={leadWork.data.heroImageAlt || leadWork.data.thumbnailAlt}
+              loading="eager"
+              decoding="async"
+            />
+          ) : null}
+          <span class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-5 pt-16 text-sm font-semibold text-white">
+            {leadWork.data.title}
+          </span>
+        </a>
+      )
+    }
   </section>
 
   <section class="mx-auto max-w-7xl px-5 pb-16 lg:px-8 lg:pb-24">
@@ -78,7 +107,7 @@ const featuredWorks = await getFeaturedWorks();
 
   <PageHeader
     eyebrow="Low-friction workflow"
-    title="Upload once, route it to the right shelf."
-    description="The upload page records the destination page, content category, AI tool, tags, and optional YouTube URL. The build script turns that into optimized media, thumbnails, embeds, and MDX records."
+    title="Upload once, let the portfolio do the sorting."
+    description="Add images, YouTube work, or GLB models with useful metadata. The publishing pipeline prepares each item for its section and creates the portfolio record automatically."
   />
 </BaseLayout>

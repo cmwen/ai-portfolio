@@ -1,0 +1,22 @@
+---
+import PageHeader from '../components/PageHeader.astro';
+import WorkGrid from '../components/WorkGrid.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getWorksByType } from '../lib/works';
+
+const works = await getWorksByType(['model']);
+---
+
+<BaseLayout
+  title="3D Models"
+  description="Interactive AI-assisted 3D models and spatial studies."
+>
+  <PageHeader
+    eyebrow="3D Models"
+    title="Objects you can turn, inspect, and explore."
+    description="Interactive GLB models, presented in the browser with touch, mouse, and keyboard-friendly camera controls."
+  />
+  <section class="mx-auto max-w-7xl px-5 pb-20 lg:px-8">
+    <WorkGrid works={works} />
+  </section>
+</BaseLayout>

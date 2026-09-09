@@ -1,7 +1,7 @@
 # AI Portfolio
 
-Static Astro side portfolio for AI-generated designs and content. Long-form
-writing, tags, search, and personal context live on the main blog at
+Static Astro side portfolio for AI-generated designs, content, and interactive
+3D models. Long-form writing, tags, search, and personal context live on the main blog at
 <https://cmwen.github.io/>.
 
 Production target:
@@ -23,6 +23,7 @@ ai-portfolio
 - pnpm
 - Tailwind CSS 4 via the Vite plugin
 - Astro Content Collections
+- `<model-viewer>` for interactive GLB rendering
 - MDX works
 - Static output only
 - GitHub Pages deployment with GitHub Actions
@@ -64,6 +65,7 @@ The low-effort path is:
 3. Choose the destination page:
    - `Designs` for icons, images, UX, identity, prototypes, and collections.
    - `Contents` for posters, comics, videos, audio, embeds, and shareable media.
+   - `3D Models` for self-contained `.glb` files.
 4. Choose the category and AI tool. ChatGPT and Gemini are built in, and
    "Manual entry" supports any other tool name.
 5. Optionally add a title, short description, tags, and a YouTube URL.
@@ -82,6 +84,12 @@ incoming/images/
 
 It imports as a design image when there is no sidecar metadata.
 
+GLB uploads are committed unchanged to:
+
+```txt
+incoming/models/
+```
+
 Run the site:
 
 ```bash
@@ -94,6 +102,7 @@ It creates:
 - optimized images in `public/media/images/auto/`
 - thumbnails in `public/media/thumbnails/auto/`
 - generated MDX landing pages in `src/content/works/generated/`
+- copied GLB assets in `public/media/models/auto/`
 
 Filename tips:
 
@@ -128,7 +137,7 @@ Example:
 
 ```json
 {
-  "title": "Synthetic Weather Study",
+  "title": "Ambient Motion Reel",
   "description": "AI-generated video hosted on YouTube.",
   "category": "video",
   "aiTool": "Runway",
@@ -145,6 +154,14 @@ The `/upload/` form supports both paths: include a cover image to upload an
 image and sidecar together, or leave the image blank to upload a video/embed
 manifest directly.
 
+## 3D Model Workflow
+
+Choose `3D Models` on `/upload/`, then select a self-contained `.glb` file.
+The uploader keeps the model binary unchanged, adds its metadata sidecar, and
+publishes it to the interactive `/models/` section. Keep browser uploads below
+95 MB and embed textures in the GLB so the deployed model does not depend on
+separate asset files.
+
 ## Manual Content
 
 Works live in:
@@ -159,9 +176,9 @@ Each entry is MDX with frontmatter similar to:
 title: 'AI Sailing Jersey Concept'
 slug: 'ai-sailing-jersey'
 description: 'AI-generated concept design.'
-page: 'design' # design | content
+page: 'design' # design | content | model
 category: 'image'
-type: 'image' # image | video | audio | embed | collection
+type: 'image' # image | video | audio | embed | collection | model
 status: 'published'
 createdAt: '2026-06-18'
 updatedAt: '2026-06-18'
@@ -173,6 +190,7 @@ videoUrl: ''
 audioUrl: ''
 embedUrl: ''
 externalUrl: ''
+modelUrl: ''
 aiTool: 'ChatGPT'
 tools:
   - 'ChatGPT'
@@ -193,6 +211,7 @@ Use local repo storage for small and medium assets:
 
 - thumbnails: `public/media/thumbnails/`
 - compressed images: `public/media/images/`
+- GLB models: `public/media/models/`
 - small demo audio/video files: `public/media/audio/`
 - metadata in MDX frontmatter
 
@@ -211,6 +230,7 @@ for GitHub Pages.
 - `/` home and featured records
 - `/designs/` design collection: icon, image, UX, identity, collection, etc.
 - `/contents/` content collection: poster, comic, video, audio, embed, etc.
+- `/models/` interactive GLB model collection
 - `/works/` all published works
 - `/works/[slug]/` work detail pages
 - `/images/`, `/videos/`, `/audio/`, `/experiments/` legacy media filters
@@ -244,6 +264,6 @@ Workflows:
 - The default generated metadata is deliberately plain so publishing does not
   require a writing session.
 - Sidecar JSON supports destination page, category, AI tool, tags, title,
-  description, and YouTube URL.
+  description, YouTube URL, and GLB model metadata.
 - YouTube manifests in `incoming/contents/videos/` can create embed pages
   without committing full video files.
