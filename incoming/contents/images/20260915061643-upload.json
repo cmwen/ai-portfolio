@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "page": "content",
+  "category": "poster",
+  "title": "",
+  "description": "",
+  "type": "image",
+  "aiTool": "ChatGPT",
+  "tools": [
+    "ChatGPT"
+  ],
+  "tags": [
+    "ai-generated",
+    "poster"
+  ],
+  "youtubeUrl": "",
+  "sourceName": "情緒到理性決策指南.png",
+  "outputName": "20260915061643-upload.webp",
+  "uploadedAt": "2026-09-15T06:16:53.869Z",
+  "width": 1222,
+  "height": 1287
+}
