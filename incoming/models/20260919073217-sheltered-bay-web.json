@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "page": "model",
+  "category": "3d-model",
+  "title": "",
+  "description": "",
+  "type": "model",
+  "aiTool": "ChatGPT",
+  "tools": [
+    "ChatGPT"
+  ],
+  "tags": [
+    "ai-generated",
+    "3d-model"
+  ],
+  "youtubeUrl": "",
+  "sourceName": "Sheltered_Bay_web.glb",
+  "outputName": "20260919073217-sheltered-bay-web.glb",
+  "uploadedAt": "2026-09-19T07:32:44.021Z",
+  "modelFile": "20260919073217-sheltered-bay-web.glb"
+}
